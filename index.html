@@ -1,0 +1,1636 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>UOR Atlas Explorer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,500;0,600;1,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: an instrument bench. The Coxeter-plane figure is the instrument; the inspector reads it out beside it; evidence sections follow below. */
+:root {
+  --bg: #f4f5f8;
+  --panel: #fbfbfd;
+  --fg: #1a1c28;
+  --muted: #5a5f72;
+  --faint: #9196a8;
+  --line: #d9dce5;
+  --dot: #a9adbd;
+  --accent: #7a4dd6;
+  --b0: #c2572b;
+  --b1: #3a62c4;
+  --b2: #008c7c;
+  --b3: #a8780a;
+  --ok: #1e7a45;
+  --s0: #3f2585; --s1: #6a45c9; --s2: #9a7fe0; --s3: #c6b5ef; --s4: #e6dff8;
+  --display: "Spectral", "Iowan Old Style", Georgia, serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --step--1: 0.8125rem;
+  --step-0: 0.9375rem;
+  --step-1: 1.125rem;
+  --step-2: 1.5rem;
+  --step-3: 2.25rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #13141c; --panel: #1a1c27; --fg: #e6e7ef; --muted: #a2a6ba; --faint: #6c7086;
+    --line: #2b2e3d; --dot: #4e5266; --accent: #a585f2;
+    --b0: #d8703c; --b1: #6d8ce6; --b2: #1fa99a; --b3: #b3861a; --ok: #5cc28a;
+    --s0: #e4dbff; --s1: #b9a2f5; --s2: #8d6fe0; --s3: #5f46a8; --s4: #3b2e68;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #13141c; --panel: #1a1c27; --fg: #e6e7ef; --muted: #a2a6ba; --faint: #6c7086;
+  --line: #2b2e3d; --dot: #4e5266; --accent: #a585f2;
+  --b0: #d8703c; --b1: #6d8ce6; --b2: #1fa99a; --b3: #b3861a; --ok: #5cc28a;
+    --s0: #e4dbff; --s1: #b9a2f5; --s2: #8d6fe0; --s3: #5f46a8; --s4: #3b2e68;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--body); font-size: var(--step-0); line-height: 1.55;
+}
+.wrap {
+  max-width: 1180px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 56px;
+  display: grid; gap: 40px;
+}
+header { display: grid; gap: 14px; }
+.eyebrow { font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--display); font-weight: 600; font-size: var(--step-3); line-height: 1.1; margin: 0; text-wrap: balance; }
+h1 em { font-style: italic; font-weight: 500; color: var(--accent); }
+h2 { font-family: var(--display); font-weight: 600; font-size: var(--step-2); margin: 0; text-wrap: balance; }
+h3 { font-size: var(--step--1); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 0; }
+p { margin: 0; max-width: 66ch; }
+.lede { font-size: var(--step-1); color: var(--muted); max-width: 62ch; }
+code, .mono { font-family: var(--mono); font-size: 0.92em; }
+
+.tabs { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 2px; background: var(--panel); width: max-content; max-width: 100%; }
+.tabs button { font: 500 var(--step-0)/1 var(--body); color: var(--muted); background: transparent; border: 0; padding: 9px 16px; border-radius: 999px; cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--fg); color: var(--bg); }
+.tabs button:focus-visible, .btn:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.bench { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+@media (max-width: 860px) { .bench { grid-template-columns: minmax(0, 1fr); } }
+figure { margin: 0; display: grid; gap: 10px; min-width: 0; }
+.stage { position: relative; width: 100%; max-width: 100%; aspect-ratio: 1 / 1; }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: manipulation; cursor: crosshair; }
+figcaption { font-size: var(--step--1); color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: var(--step--1); color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.sw.ring { background: transparent !important; border: 2px solid var(--dot); }
+
+.inspector { display: grid; gap: 22px; min-width: 0; }
+.modeText { color: var(--fg); }
+.readout { display: grid; gap: 10px; padding-top: 18px; border-top: 1px solid var(--line); }
+.kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 14px; font-size: var(--step--1); }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; font-family: var(--mono); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn { font: 500 var(--step--1)/1 var(--body); color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; cursor: pointer; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+.btn.simple { font-family: var(--mono); min-width: 44px; }
+.note { font-size: var(--step--1); color: var(--muted); }
+.event { font-size: var(--step--1); padding: 10px 12px; border-radius: 8px; background: var(--panel); border: 1px solid var(--line); }
+.event strong { font-weight: 600; }
+
+table.q { border-collapse: collapse; font-family: var(--mono); font-size: var(--step--1); font-variant-numeric: tabular-nums; }
+table.q th, table.q td { width: 34px; height: 28px; text-align: center; padding: 0; }
+table.q th { color: var(--muted); font-weight: 500; }
+table.q td { border: 1px solid var(--line); }
+table.q td.zero { color: var(--faint); }
+
+section { display: grid; gap: 16px; }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+@media (max-width: 860px) { .two { grid-template-columns: minmax(0, 1fr); } }
+.chart { position: relative; width: 100%; max-width: 100%; }
+.chart canvas { width: 100%; display: block; }
+.tip { position: absolute; pointer-events: none; background: var(--fg); color: var(--bg); font: 500 var(--step--1)/1.3 var(--mono); padding: 6px 8px; border-radius: 6px; white-space: nowrap; transform: translate(-50%, -110%); }
+.big { font-family: var(--display); font-size: var(--step-2); font-variant-numeric: tabular-nums lining-nums; }
+.arith { display: grid; gap: 6px; }
+.progress { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.progress i { display: block; height: 100%; width: 0; background: var(--accent); }
+
+.tablewrap { overflow-x: auto; }
+table.ev { border-collapse: collapse; width: 100%; min-width: 640px; font-size: var(--step--1); }
+table.ev th { text-align: left; font-weight: 600; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--line); }
+table.ev td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.ev td.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pill { display: inline-flex; align-items: center; gap: 5px; font: 500 0.75rem/1 var(--body); padding: 4px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.pill.ok { color: var(--ok); border-color: currentColor; }
+.toc { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: var(--step--1); }
+.toc a { color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--line); }
+.toc a:hover, .toc a:focus-visible { color: var(--fg); border-color: var(--fg); }
+.f2 { display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 2px; width: 100%; max-width: 440px; }
+.f2 button { aspect-ratio: 1 / 1; border: 0; padding: 0; background: transparent; display: grid; place-items: center; cursor: pointer; border-radius: 3px; }
+.f2 button i { display: block; width: 66%; height: 66%; border-radius: 50%; }
+.f2 button i.ring { background: transparent !important; border: 1.5px solid var(--line); width: 46%; height: 46%; }
+.f2 button i.zero { border-radius: 1px; width: 30%; height: 30%; background: var(--faint); }
+.f2 button.nb { box-shadow: 0 0 0 1.5px var(--accent) inset; }
+.f2 button.cur { box-shadow: 0 0 0 2px var(--fg) inset; }
+.f2 button:disabled { cursor: default; }
+.sw.sel { background: transparent !important; box-shadow: 0 0 0 1.5px var(--accent) inset; border-radius: 3px; }
+.chip { font: 500 var(--step--1)/1 var(--mono); color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 7px 11px; cursor: pointer; }
+.chip[aria-pressed="true"] { color: var(--bg); background: var(--fg); border-color: var(--fg); }
+.csq { display: grid; grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr); grid-template-rows: auto 34px auto; gap: 0; max-width: 720px; align-items: center; }
+.csq .cell { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); padding: 10px 12px; display: grid; gap: 4px; min-width: 0; }
+.csq .cell .t { font-size: 0.75rem; color: var(--muted); }
+.csq .cell .v { font: 500 var(--step--1)/1.35 var(--mono); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.csq .arr { text-align: center; color: var(--muted); font: 500 0.75rem/1.2 var(--mono); }
+.csq .ok { color: var(--ok); font-weight: 600; }
+.glue { display: grid; grid-template-columns: max-content repeat(24, minmax(18px, 1fr)); gap: 3px 2px; overflow-x: auto; font-size: 0.75rem; align-items: center; }
+.glue .h { color: var(--muted); padding-right: 10px; white-space: nowrap; }
+.glue .n { text-align: center; font-family: var(--mono); color: var(--muted); }
+.glue button { border: 0; background: transparent; padding: 3px 0; cursor: pointer; display: grid; place-items: center; border-radius: 4px; }
+.glue button i { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--line); display: block; }
+.glue button i.on { background: var(--fg); border-color: var(--fg); }
+.glue button i.root { background: var(--accent); border-color: var(--accent); }
+.glue button.col { box-shadow: 0 0 0 1px var(--line) inset; background: var(--panel); }
+
+.ladder { display: grid; gap: 0; border-top: 1px solid var(--line); }
+.rung { display: grid; grid-template-columns: minmax(150px, 1.1fr) minmax(0, 2.4fr) minmax(170px, 1fr); gap: 10px 24px; padding-block: 16px; border-bottom: 1px solid var(--line); align-items: start; }
+@media (max-width: 860px) { .rung { grid-template-columns: minmax(0, 1fr); } }
+.rung h4 { margin: 0; font: 600 var(--step-0)/1.3 var(--body); }
+.rung .sub { font-size: var(--step--1); color: var(--muted); }
+.specbar { display: flex; gap: 2px; height: 22px; width: 100%; }
+.specbar span { display: block; height: 100%; min-width: 3px; border-radius: 3px; }
+.spectext { font-family: var(--mono); font-size: var(--step--1); font-variant-numeric: tabular-nums; color: var(--fg); margin-top: 6px; overflow-wrap: anywhere; }
+.meter { display: grid; grid-template-columns: repeat(36, minmax(0, 1fr)); gap: 2px; max-width: 260px; }
+.meter i { height: 12px; border-radius: 2px; background: var(--line); }
+.meter i.on { background: var(--accent); }
+.rkey { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: var(--step--1); color: var(--muted); }
+.rkey span { display: inline-flex; gap: 6px; align-items: center; }
+.rkey i { width: 14px; height: 10px; border-radius: 2px; display: inline-block; }
+.spread { display: grid; grid-template-columns: repeat(15, minmax(0, 1fr)); gap: 6px; max-width: 640px; }
+.spread .col { display: grid; gap: 3px; }
+.spread .col.gap { margin-left: 6px; }
+.spread b { display: block; aspect-ratio: 1 / 1; border-radius: 50%; }
+.spread .lab { font: 500 0.6875rem/1 var(--mono); color: var(--muted); text-align: center; padding-top: 4px; }
+.minis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 520px) { .minis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.mini { display: grid; gap: 4px; justify-items: center; padding: 10px 6px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+.mini.hit { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.mini svg { width: 72px; height: 72px; }
+.mini .cyc { font: 500 var(--step--1)/1.2 var(--mono); }
+.mini .what { font-size: 0.75rem; color: var(--muted); text-align: center; }
+.mini .n { font: 500 0.75rem/1 var(--mono); color: var(--fg); font-variant-numeric: tabular-nums; }
+.square svg { width: 100%; max-width: 260px; height: auto; display: block; }
+.params { overflow-x: auto; }
+table.pm { border-collapse: collapse; min-width: 560px; width: 100%; font-size: var(--step--1); }
+table.pm td, table.pm th { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+table.pm th { color: var(--muted); font-weight: 600; }
+table.pm td.v { font-family: var(--display); font-size: var(--step-1); font-variant-numeric: lining-nums tabular-nums; }
+.objects svg { width: 100%; max-width: 560px; height: auto; display: block; }
+.trifig svg { width: 100%; max-width: 420px; height: auto; display: block; }
+.tri-e { stroke: var(--line); stroke-width: 1; }
+.tri-lab { fill: var(--muted); font: 500 12px var(--body); }
+.tri-num { fill: var(--bg); font: 600 9px var(--mono); }
+table.signs { border-collapse: collapse; font-size: var(--step--1); min-width: 300px; }
+table.signs td, table.signs th { padding: 5px 10px; border-bottom: 1px solid var(--line); text-align: left; }
+table.signs th { color: var(--muted); font-weight: 600; }
+table.signs td.mono { font-family: var(--mono); letter-spacing: 0.08em; }
+.minis.six { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+@media (max-width: 720px) { .minis.six { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.quadbar { display: flex; height: 34px; border-radius: 6px; overflow: hidden; gap: 2px; max-width: 760px; }
+.quadbar div { display: flex; align-items: center; padding: 0 10px; font: 500 var(--step--1)/1 var(--mono); white-space: nowrap; overflow: hidden; min-width: 0; }
+.chains { display: grid; gap: 22px; }
+.chainrow { display: grid; gap: 8px; }
+.chainrow .head { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; }
+.chainrow .head strong { font-weight: 600; }
+.steps { display: flex; flex-wrap: wrap; gap: 6px; align-items: stretch; }
+.step { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 8px 10px; display: grid; gap: 2px; min-width: 64px; }
+.step .o { font: 600 var(--step-1)/1 var(--display); font-variant-numeric: lining-nums tabular-nums; }
+.step .b { font: 500 0.75rem/1.2 var(--mono); color: var(--muted); }
+.times { align-self: center; color: var(--muted); }
+
+.o-line path { fill: none; stroke: var(--faint); stroke-width: 1.4; }
+.o-line path.o-acc { stroke: var(--accent); stroke-width: 2; }
+.o-dot circle { fill: var(--muted); }
+.o-big { fill: var(--accent); }
+.o-txt text { fill: var(--fg); font: 500 13px var(--body); }
+.o-txt text.o-sub { fill: var(--muted); font-size: 12px; }
+.sq-line { stroke: var(--faint); stroke-width: 1.5; fill: none; }
+.sq-diag { stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 4 4; fill: none; }
+.sq-txt { fill: var(--fg); font: 500 12px var(--mono); }
+.sq-sub { fill: var(--muted); font: 500 11px var(--body); }
+
+
+footer { font-size: var(--step--1); color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">LexLean · examples/uor-atlas · E8 at scale 2</div>
+    <h1>The UOR Atlas, <em>moving</em></h1>
+    <p class="lede">The Atlas is 48 of E8's 120 root classes, cut into four blocks of 12. Everything here is computed in your browser from the 120 class representatives and 8 simple roots stored in the kernel-checked source, then compared with the theorems that source proves.</p>
+    <div class="tabs" role="tablist" aria-label="View">
+      <button role="tab" id="tab-ambient" aria-selected="false" data-mode="ambient">Ambient E8</button>
+      <button role="tab" id="tab-atlas" aria-selected="true" data-mode="atlas">The Atlas</button>
+      <button role="tab" id="tab-dynamics" aria-selected="false" data-mode="dynamics">Dynamics</button>
+    </div>
+    <nav class="toc" aria-label="On this page"><a href="#orbit">Orbit</a><a href="#adjacency">Adjacency</a><a href="#gauge">Gauge square</a><a href="#scales">Scales</a><a href="#spreads">Frames</a><a href="#block">Inside a block</a><a href="#quads">Quads</a><a href="#meet">Overlaps</a><a href="#chain">Chains</a><a href="#primes">At a prime</a><a href="#one">One object</a><a href="#eight">Why eight</a><a href="#parameters">Parameters</a><a href="#kernel">Kernel checks</a></nav>
+  </header>
+
+  <div class="bench">
+    <figure>
+      <div class="stage" id="stage"><canvas id="plane" aria-label="E8 roots projected onto the Coxeter plane"></canvas></div>
+      <div class="legend" id="legend"></div>
+      <figcaption id="caption">240 roots projected onto E8's Coxeter plane: eight rings of 30. Each class is a root together with its negative, drawn on opposite sides of the centre.</figcaption>
+    </figure>
+
+    <div class="inspector">
+      <p class="modeText" id="modeText"></p>
+
+      <div class="readout" id="dynControls" hidden>
+        <h3>Reflect</h3>
+        <div class="controls" id="simpleBtns"></div>
+        <div class="controls">
+          <button class="btn" id="walkBtn">Random walk, 12 steps</button>
+          <button class="btn" id="homeBtn" disabled>Walk home</button>
+          <button class="btn primary" id="gaugeBtn" disabled>Run a gauge loop</button>
+          <button class="btn" id="frameBtn">Reflect through a frame</button>
+          <button class="btn" id="resetBtn">Reset to A0</button>
+        </div>
+        <p class="note">Tap any root in the figure to reflect through it. The orbit map below must finish before walking home or running a gauge loop.</p>
+        <div class="event" id="event" hidden></div>
+      </div>
+
+      <div class="readout">
+        <h3 id="selTitle">Selected class</h3>
+        <dl class="kv" id="selKv"></dl>
+      </div>
+
+      <div class="readout">
+        <h3>Current instance</h3>
+        <dl class="kv" id="instKv"></dl>
+        <div style="display:grid;gap:8px">
+          <div class="note">Edges from a block to each block, per class (<code>D19</code>)</div>
+          <div style="overflow-x:auto"><table class="q" id="quot"></table></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="orbit">
+    <h2>The orbit</h2>
+    <p>Starting from the canonical instance A0, the eight simple reflections reach every Atlas instance. The breadth-first map below counts how many instances sit at each reflection distance from A0. Its total is the census, and the orbit–stabilizer theorem turns the census into the size of the gauge group.</p>
+    <div class="two">
+      <div class="chart" id="histWrap">
+        <canvas id="hist" height="260" aria-label="Instances by reflection distance from A0"></canvas>
+        <div class="tip" id="histTip" hidden></div>
+      </div>
+      <div class="arith">
+        <div class="progress"><i id="prog"></i></div>
+        <div class="note" id="orbitStatus">Mapping the orbit…</div>
+        <div class="big" id="orbitArith">348,364,800 ÷ ? = ?</div>
+        <p class="note">348,364,800 is the order of W(E8)/{±1} acting on the 120 classes (<code>Group.T59</code>). Dividing by the number of instances gives the order of the subgroup that maps A0 to itself: the gauge group (<code>gaugeOrderW0</code>).</p>
+        <dl class="kv" id="orbitKv"></dl>
+      </div>
+    </div>
+  </section>
+
+  <section id="adjacency">
+    <h2>Adjacency, reordered</h2>
+    <div class="two">
+      <div class="chart"><canvas id="heat" aria-label="120 by 120 adjacency matrix ordered by blocks of the current instance"></canvas></div>
+      <div style="display:grid;gap:12px">
+        <p>Rows and columns are the 120 classes, with the current instance first, block by block, then the 72 classes outside it. A filled cell means the two classes are not orthogonal.</p>
+        <p>Each 12×12 square on the diagonal has 8 cells per row filled: a block is a D4. The square pairing a block with its frame partner is empty, because the two blocks are orthogonal. Every other off-diagonal square has 6 per row, so each instance class sees 8 + 6 + 6 = 20 neighbours inside. Reflect the instance in Dynamics and this picture stays the same.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="gauge">
+    <h2>The gauge square</h2>
+    <p>A reflection word that carries A0 back onto its own 48 classes is a gauge transformation. There are 4,608 of them, and they move the four blocks in only eight ways. Put the blocks at the corners of a square with the two frames as its diagonals: the sides are the block pairs joined by 6 edges per class, the diagonals are the orthogonal pairs, and the eight arrangements are exactly the symmetries of that square.</p>
+    <div class="two">
+      <div class="square"><svg id="sqBig" viewBox="0 0 260 280" role="img" aria-label="Four blocks at the corners of a square; frames are the diagonals"></svg></div>
+      <div style="display:grid;gap:14px;align-content:start">
+        <div class="controls"><button class="btn" id="sampleBtn" disabled>Sample 200 more</button></div>
+        <dl class="kv" id="gaugeKv"></dl>
+        <p class="note">Each sample is a random element of the reflection group followed by the shortest path back to A0 in the orbit map. A gauge loop run in Dynamics is counted here too.</p>
+      </div>
+    </div>
+    <div class="minis" id="minis"></div>
+  </section>
+
+  <section id="scales">
+    <h2>Five scales</h2>
+    <p>The source nests the instance in a tower: block 0 inside the frame it forms with block 3, inside the 48-class instance, with the 72 outside classes as its residue and all 120 classes on top. Give each class x the projector P<sub>x</sub> onto its line. At every scale three readings agree. The −4 eigenvectors of the adjacency are exactly the linear relations among the projectors (<code>Scales.S14</code>), so the projectors span n − m(−4) of the 36 dimensions of symmetric 8×8 matrices. An adjacency eigenvalue λ is an eigenvalue 1 + λ/4 of the projectors' Gram matrix (<code>S37</code>). And the projectors of each scale above the block add up to a multiple of the identity (<code>S17</code>).</p>
+    <div class="rkey" id="rkey"></div>
+    <div class="ladder" id="ladder"></div>
+  </section>
+
+  <section id="spreads">
+    <h2>Orthogonal frames</h2>
+    <p>Eight mutually orthogonal classes form an orthogonal 8-frame: an orthonormal basis of the ambient space, up to sign. Every class lies in 135 of them (<code>Scales.S25</code>). The current instance contains 36, and its 48 classes split into 6 disjoint ones; the residue splits into 9 (<code>S7</code>, <code>S11</code>). Together the two splits cut all 120 classes into 15 orthonormal bases, which is why the instance's projectors add up to 6·I and the residue's to 9·I.</p>
+    <div class="controls"><button class="btn" id="spreadBtn">Show another split</button></div>
+    <div class="spread" id="spread" aria-label="A split of the 120 classes into 15 orthogonal 8-frames"></div>
+    <p class="note" id="spreadNote"></p>
+  </section>
+
+  <section id="block">
+    <h2>Inside a block</h2>
+    <p>A block is 12 classes whose 24 roots form a D4. Its classes fall into three parts of four. Classes in the same part are orthogonal, and every class is adjacent to all eight classes in the other two parts (<code>Scales.S1</code>, <code>S29</code>). So the block's graph is three groups of four with every edge between groups.</p>
+    <div class="controls" role="group" aria-label="Block"><span class="note" style="align-self:center">Block of the current instance</span><span id="blockChips" class="controls"></span></div>
+    <div class="two">
+      <div class="trifig"><svg id="triSvg" viewBox="0 0 340 300" role="img" aria-label="The three parts of a block and the edges between them"></svg></div>
+      <div style="display:grid;gap:12px;align-content:start;min-width:0">
+        <p>Choose one part as a basis r<sub>1</sub>, r<sub>2</sub>, r<sub>3</sub>, r<sub>4</sub>. Every other class of the block is ½(±r<sub>1</sub> ± r<sub>2</sub> ± r<sub>3</sub> ± r<sub>4</sub>), read off by Parseval from its four inner products (<code>Census.recon_of_parseval</code>, <code>Blocks.Recon</code>). The 16 sign patterns, taken up to an overall sign, give 8 classes. Patterns with an even number of minus signs make up one remaining part and odd patterns the other.</p>
+        <div class="controls" role="group" aria-label="Basis part"><span class="note" style="align-self:center">Basis</span><span id="basisChips" class="controls"></span></div>
+        <div class="tablewrap"><table class="signs" id="signTable"></table></div>
+      </div>
+    </div>
+    <div style="display:grid;gap:12px">
+      <h3>Triality</h3>
+      <p>The reflection words that carry a block onto itself permute its three parts. Sampling them shows all six permutations: the symmetries of a block realize every rearrangement of its parts, the triality of D4. There are 348,364,800 ÷ 3,150 = 110,592 such symmetries. Each sample is a random element of the reflection group followed by the shortest path back to the block, using a map of all 3,150 blocks.</p>
+      <div class="controls"><button class="btn" id="triSample" disabled>Sample 100 block symmetries</button><button class="btn" id="triRun" disabled>Run one on the figure</button></div>
+      <div class="minis six" id="tri6"></div>
+      <p class="note" id="triNote">Mapping the 3,150 blocks…</p>
+    </div>
+  </section>
+
+  <section id="quads">
+    <h2>Blocks from four classes</h2>
+    <p>The census finds every block from four mutually orthogonal classes. Take the four, together with every class adjacent to all four of them. When that set has 12 classes it is a block (<code>Census.block_of_quad</code>), and its classes are exactly the roots in the span of the four (<code>mem_quadSet_iff_inSpan</code>). Every block arises this way (<code>block_has_orthogonal_quad</code>). Most orthogonal quads have no common neighbour at all and span no other root.</p>
+    <div class="quadbar" id="quadBar" aria-label="Orthogonal quads by type"></div>
+    <div class="controls"><button class="btn" id="quadBtn" disabled>Draw an orthogonal quad</button><button class="btn" id="quadBlkBtn" disabled>Draw one that closes</button></div>
+    <dl class="kv" id="quadKv"></dl>
+  </section>
+
+  <section id="meet">
+    <h2>How instances meet</h2>
+    <p>Compare the current instance with all 75,600 instances. Two instances share no block, exactly one frame (two blocks), or all four blocks. They never share exactly one or three blocks, because a shared block brings its orthogonal partner with it. The distribution is the same from every instance, because the reflection group carries any instance to any other. Click a bar to walk to an instance with that overlap.</p>
+    <div class="chart" id="meetWrap"><canvas id="meetHist" height="260" aria-label="Instances by number of classes shared with the current instance"></canvas><div class="tip" id="meetTip" hidden></div></div>
+    <div class="legend"><span><i class="sw" style="background:var(--dot)"></i>no shared block</span><span><i class="sw" style="background:var(--accent)"></i>one shared frame</span><span><i class="sw" style="background:var(--fg)"></i>the instance itself</span></div>
+    <dl class="kv" id="meetKv"></dl>
+    <div class="two">
+      <div style="display:grid;gap:10px;min-width:0"><h3>Completing a frame</h3><div class="chart"><canvas id="frameInc" aria-label="Incidence of outside classes and frame completions"></canvas></div></div>
+      <div style="display:grid;gap:12px;align-content:start">
+        <p>The frame made of blocks 0 and 3 lies in exactly 96 instances. Their other halves are 96 different frames built from the 96 classes outside it, and each of those classes appears in exactly 24 of them. The matrix shows the incidence: classes down the side, completions across, with the current completion in the first column.</p>
+        <dl class="kv" id="frameKv"></dl>
+      </div>
+    </div>
+  </section>
+
+  <section id="chain">
+    <h2>The group, level by level</h2>
+    <p>The source certifies its group orders with stabilizer chains (<code>Group.autChain</code>, <code>stabChain</code>, <code>kerChain</code>). Fix a base point and count its orbit, pass to the subgroup that fixes that point, and repeat. The order is the product of the orbit lengths. The page rebuilds each chain from the source's own base points with a randomized Schreier–Sims run. A partial chain can only undercount, so reaching the proved order confirms it.</p>
+    <div class="chains" id="chains"><p class="note">Waiting for the orbit map…</p></div>
+  </section>
+
+  <section id="primes">
+    <h2>The Atlas at a prime</h2>
+    <p>The Places layer looks at E8 one prime at a time. At a prime p, a rational number is integral when p does not divide its denominator. Every root has integer coordinates in the basis of the eight simple roots (<code>Places.V65c</code>), and the Gram matrix of that basis has determinant 1 with an integer inverse (<code>Roots.T58x</code>, <code>Places.gramInvRows</code>), so E8 equals its own dual at every prime (<code>Places.T58</code>, <code>T67</code>). Each class gets an address at every prime, the addresses are all different (<code>T75</code>, <code>V71</code>), and reflections carry addresses to addresses (<code>V75</code>).</p>
+    <div class="two">
+      <div style="display:grid;gap:10px;min-width:0">
+        <h3>Residues at p = 2</h3>
+        <div class="f2" id="f2" role="grid" aria-label="All 256 vectors of E8 modulo 2"></div>
+        <div class="legend"><span><i class="sw" style="background:var(--dot)"></i>a root class (120)</span><span><i class="sw ring"></i>a nonzero non-root vector (135)</span><span><i class="sw" style="background:var(--b0)"></i>instance classes, by block</span><span><i class="sw sel"></i>neighbours of the selected class</span></div>
+        <p class="note">Rows and columns read the simple coordinates mod 2: coordinates 5–8 choose the row, 1–4 the column. Tap a cell to select its class.</p>
+      </div>
+      <div style="display:grid;gap:14px;align-content:start;min-width:0">
+        <p>Mod 2, E8 becomes the 256 vectors of F₂⁸, and its quadratic form becomes a form q with values 0 and 1. The 120 classes land on exactly the 120 vectors with q = 1, and two classes are neighbours exactly when their mod-2 inner product is 1. A reflection becomes the map x ↦ x + B(x, r)·r. Move the instance in Dynamics and its 48 cells move across this grid.</p>
+        <dl class="kv" id="f2Kv"></dl>
+        <p class="note">This residue picture is computed on the page. The source works with the localization at p itself; reducing mod p is one step further.</p>
+      </div>
+    </div>
+    <div style="display:grid;gap:12px">
+      <h3>Reflect, then reduce</h3>
+      <p>The Functor layer proves that the reflection group acts compatibly with every localization (<code>Functor.F3</code>, <code>F6</code>, <code>T79</code>): reflecting and then passing to the prime gives the same result as passing to the prime and then reflecting. The square below runs this on the selected class.</p>
+      <div class="controls" role="group" aria-label="Prime"><span class="note" style="align-self:center">Prime</span><span id="primeChips" class="controls"></span></div>
+      <div class="controls" role="group" aria-label="Reflection"><span class="note" style="align-self:center">Reflection</span><span id="reflChips" class="controls"></span></div>
+      <div class="csq" id="csq"></div>
+    </div>
+  </section>
+
+  <section id="one">
+    <h2>One object</h2>
+    <div class="two">
+      <div class="objects">
+        <svg viewBox="0 0 560 220" role="img" aria-label="The action groupoid collapses to a single object">
+          <g class="o-line">
+            <path d="M70 70 C 120 40, 170 40, 220 70"/><path d="M70 76 C 120 56, 170 56, 220 76"/><path d="M70 82 C 120 72, 170 72, 220 82"/>
+            <path d="M70 160 L 220 160"/><path d="M60 90 L 60 145"/><path d="M230 90 L 230 145"/>
+            <path class="o-acc" d="M290 115 L 380 115"/><path class="o-acc" d="M372 108 L 382 115 L 372 122"/>
+          </g>
+          <g class="o-dot"><circle cx="60" cy="78" r="9"/><circle cx="230" cy="78" r="9"/><circle cx="60" cy="158" r="9"/><circle cx="230" cy="158" r="9"/><circle cx="145" cy="190" r="6"/><circle cx="145" cy="118" r="6"/></g>
+          <circle class="o-big" cx="460" cy="115" r="16"/>
+          <g class="o-txt">
+            <text x="145" y="30" text-anchor="middle">4,608 arrows between any two</text>
+            <text x="145" y="214" text-anchor="middle">75,600 instances</text>
+            <text x="335" y="102" text-anchor="middle">thin quotient</text>
+            <text x="460" y="155" text-anchor="middle">the Atlas</text>
+            <text x="460" y="172" text-anchor="middle" class="o-sub">one object, a zero object</text>
+          </g>
+        </svg>
+      </div>
+      <div style="display:grid;gap:12px">
+        <p>Take the instances as objects and the elements of the reflection group carrying one to another as arrows. This is the action groupoid of the source (<code>D23</code>). Between any two instances there are exactly 4,608 arrows (<code>T35</code>), and the gauge group acts on each arrow set freely and transitively (<code>T40</code>, <code>T42</code>). So no instance is initial (<code>T36</code>): there is never a single preferred way to get from one to another.</p>
+        <p>Collapse every arrow set to one arrow. Then every instance is a zero object (<code>T45</code>), and the skeleton has exactly one object (<code>T37</code>, <code>T63a</code>). That object is the Atlas (<code>D27</code>). The walks in Dynamics are arrows of the groupoid: a gauge loop is one of A0's 4,608 endomorphisms, and walking home composes arrows back to the base point.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="eight">
+    <h2>Why eight</h2>
+    <p>The Glue module builds a lattice in every dimension n: the even-sum integer vectors D<sub>n</sub>, glued to the shifted copy D<sub>n</sub> + ½·(1,…,1). It proves which of these behave like E8. The glued set is closed under addition only when 2 divides n, its inner products are integers only when 4 divides n, and its norms are even only when 8 divides n (<code>Glue.T57a</code>–<code>c</code>). The glue vector ½·(1,…,1) has norm n/4, so it is a root, with norm 2, only at n = 8 (<code>T84</code>, <code>T85</code>). That is where the glue coset contributes roots of its own, and the root system becomes E8.</p>
+    <div class="glue" id="glue"></div>
+    <dl class="kv" id="glueKv"></dl>
+  </section>
+
+  <section id="parameters">
+    <h2>The eight parameters</h2>
+    <p>The source fixes its numbers before any geometry (<code>Parameters.T1</code>–<code>T4</code>). The last column counts the same number in the structure on this page.</p>
+    <div class="params"><table class="pm" id="params"></table></div>
+  </section>
+
+  <section id="kernel">
+    <h2>Checked against the kernel</h2>
+    <p>Each row pairs a theorem in the Atlas source with the same quantity recomputed on this page. Rows marked live follow the current instance.</p>
+    <div class="tablewrap"><table class="ev" id="evidence">
+      <thead><tr><th>Statement</th><th>Theorem</th><th>Proved</th><th>Computed here</th><th></th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </section>
+
+  <footer>Source: <code>UOR-Foundation/LexLean</code>, <code>examples/uor-atlas/src</code>. Class representatives are <code>Roots.repWords</code>, the simple roots are <code>Roots.simWords</code>, and A0 is <code>Blocks.blkSet</code>. Coordinates are stored doubled, so roots have norm 8; the inspector shows them at E8 scale. Class numbers are the source's own indices.</footer>
+</div>
+
+<script>
+const D = {"reps":[[2,2,0,0,0,0,0,0],[2,-2,0,0,0,0,0,0],[2,0,2,0,0,0,0,0],[2,0,-2,0,0,0,0,0],[2,0,0,2,0,0,0,0],[2,0,0,-2,0,0,0,0],[2,0,0,0,2,0,0,0],[2,0,0,0,-2,0,0,0],[2,0,0,0,0,2,0,0],[2,0,0,0,0,-2,0,0],[2,0,0,0,0,0,2,0],[2,0,0,0,0,0,-2,0],[2,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,-2],[0,2,2,0,0,0,0,0],[0,2,-2,0,0,0,0,0],[0,2,0,2,0,0,0,0],[0,2,0,-2,0,0,0,0],[0,2,0,0,2,0,0,0],[0,2,0,0,-2,0,0,0],[0,2,0,0,0,2,0,0],[0,2,0,0,0,-2,0,0],[0,2,0,0,0,0,2,0],[0,2,0,0,0,0,-2,0],[0,2,0,0,0,0,0,2],[0,2,0,0,0,0,0,-2],[0,0,2,2,0,0,0,0],[0,0,2,-2,0,0,0,0],[0,0,2,0,2,0,0,0],[0,0,2,0,-2,0,0,0],[0,0,2,0,0,2,0,0],[0,0,2,0,0,-2,0,0],[0,0,2,0,0,0,2,0],[0,0,2,0,0,0,-2,0],[0,0,2,0,0,0,0,2],[0,0,2,0,0,0,0,-2],[0,0,0,2,2,0,0,0],[0,0,0,2,-2,0,0,0],[0,0,0,2,0,2,0,0],[0,0,0,2,0,-2,0,0],[0,0,0,2,0,0,2,0],[0,0,0,2,0,0,-2,0],[0,0,0,2,0,0,0,2],[0,0,0,2,0,0,0,-2],[0,0,0,0,2,2,0,0],[0,0,0,0,2,-2,0,0],[0,0,0,0,2,0,2,0],[0,0,0,0,2,0,-2,0],[0,0,0,0,2,0,0,2],[0,0,0,0,2,0,0,-2],[0,0,0,0,0,2,2,0],[0,0,0,0,0,2,-2,0],[0,0,0,0,0,2,0,2],[0,0,0,0,0,2,0,-2],[0,0,0,0,0,0,2,2],[0,0,0,0,0,0,2,-2],[1,1,1,1,1,1,1,1],[1,1,1,1,1,1,-1,-1],[1,1,1,1,1,-1,1,-1],[1,1,1,1,1,-1,-1,1],[1,1,1,1,-1,1,1,-1],[1,1,1,1,-1,1,-1,1],[1,1,1,1,-1,-1,1,1],[1,1,1,1,-1,-1,-1,-1],[1,1,1,-1,1,1,1,-1],[1,1,1,-1,1,1,-1,1],[1,1,1,-1,1,-1,1,1],[1,1,1,-1,1,-1,-1,-1],[1,1,1,-1,-1,1,1,1],[1,1,1,-1,-1,1,-1,-1],[1,1,1,-1,-1,-1,1,-1],[1,1,1,-1,-1,-1,-1,1],[1,1,-1,1,1,1,1,-1],[1,1,-1,1,1,1,-1,1],[1,1,-1,1,1,-1,1,1],[1,1,-1,1,1,-1,-1,-1],[1,1,-1,1,-1,1,1,1],[1,1,-1,1,-1,1,-1,-1],[1,1,-1,1,-1,-1,1,-1],[1,1,-1,1,-1,-1,-1,1],[1,1,-1,-1,1,1,1,1],[1,1,-1,-1,1,1,-1,-1],[1,1,-1,-1,1,-1,1,-1],[1,1,-1,-1,1,-1,-1,1],[1,1,-1,-1,-1,1,1,-1],[1,1,-1,-1,-1,1,-1,1],[1,1,-1,-1,-1,-1,1,1],[1,1,-1,-1,-1,-1,-1,-1],[1,-1,1,1,1,1,1,-1],[1,-1,1,1,1,1,-1,1],[1,-1,1,1,1,-1,1,1],[1,-1,1,1,1,-1,-1,-1],[1,-1,1,1,-1,1,1,1],[1,-1,1,1,-1,1,-1,-1],[1,-1,1,1,-1,-1,1,-1],[1,-1,1,1,-1,-1,-1,1],[1,-1,1,-1,1,1,1,1],[1,-1,1,-1,1,1,-1,-1],[1,-1,1,-1,1,-1,1,-1],[1,-1,1,-1,1,-1,-1,1],[1,-1,1,-1,-1,1,1,-1],[1,-1,1,-1,-1,1,-1,1],[1,-1,1,-1,-1,-1,1,1],[1,-1,1,-1,-1,-1,-1,-1],[1,-1,-1,1,1,1,1,1],[1,-1,-1,1,1,1,-1,-1],[1,-1,-1,1,1,-1,1,-1],[1,-1,-1,1,1,-1,-1,1],[1,-1,-1,1,-1,1,1,-1],[1,-1,-1,1,-1,1,-1,1],[1,-1,-1,1,-1,-1,1,1],[1,-1,-1,1,-1,-1,-1,-1],[1,-1,-1,-1,1,1,1,-1],[1,-1,-1,-1,1,1,-1,1],[1,-1,-1,-1,1,-1,1,1],[1,-1,-1,-1,1,-1,-1,-1],[1,-1,-1,-1,-1,1,1,1],[1,-1,-1,-1,-1,1,-1,-1],[1,-1,-1,-1,-1,-1,1,-1],[1,-1,-1,-1,-1,-1,-1,1]],"simple":[[1,-1,-1,-1,-1,-1,-1,1],[2,2,0,0,0,0,0,0],[-2,2,0,0,0,0,0,0],[0,-2,2,0,0,0,0,0],[0,0,-2,2,0,0,0,0],[0,0,0,-2,2,0,0,0],[0,0,0,0,-2,2,0,0],[0,0,0,0,0,-2,2,0]],"blocks":[[0,1,2,3,4,5,14,15,16,17,26,27],[6,20,32,42,56,64,73,81,90,98,107,115],[7,21,33,43,63,71,78,86,93,101,108,116],[44,45,46,47,48,49,50,51,52,53,54,55]],"u":[0.0,0.052268,0.084571,0.095498,0.084571,0.052268,-0.0,0.404534],"t":[-0.042518,-0.203381,-0.103962,0.0,0.103962,0.203381,0.293911,0.0],"ginv":[[4,5,7,10,8,6,4,2],[5,8,10,15,12,9,6,3],[7,10,14,20,16,12,8,4],[10,15,20,30,24,18,12,6],[8,12,16,24,20,15,10,5],[6,9,12,18,15,12,8,4],[4,6,8,12,10,8,6,3],[2,3,4,6,5,4,3,2]]};
+(function () {
+"use strict";
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- algebra ---------- */
+const reps = D.reps;
+const roots = reps.concat(reps.map(r => r.map(x => -x)));
+const key = v => v.join(",");
+const rootIndex = new Map(roots.map((r, i) => [key(r), i]));
+const dot = (a, b) => { let s = 0; for (let i = 0; i < 8; i++) s += a[i] * b[i]; return s; };
+const P = roots.map(r => [dot(r, D.u), dot(r, D.t)]);
+const isHalf = roots.map(r => r[0] % 2 !== 0);
+
+const A = [];
+for (let i = 0; i < 120; i++) { A.push(new Uint8Array(120)); }
+for (let i = 0; i < 120; i++) for (let j = 0; j < 120; j++) if (i !== j && Math.abs(dot(reps[i], reps[j])) === 4) A[i][j] = 1;
+
+const permCache = new Map();
+function rootPerm(r) {
+  if (permCache.has(r)) return permCache.get(r);
+  const a = roots[r], p = new Int16Array(240);
+  for (let j = 0; j < 240; j++) {
+    const v = roots[j], c = dot(v, a) / 4;
+    const w = v.map((x, k) => x - c * a[k]);
+    p[j] = rootIndex.get(key(w));
+  }
+  permCache.set(r, p);
+  return p;
+}
+const simpleRoot = D.simple.map(s => rootIndex.get(key(s)));
+const simpleClassPerm = simpleRoot.map(r => { const p = rootPerm(r), c = new Int16Array(120); for (let i = 0; i < 120; i++) c[i] = p[i] % 120; return c; });
+
+/* ---------- 120-bit masks ---------- */
+function maskOf(classes) { const w = new Uint32Array(4); for (const c of classes) w[c >> 5] = (w[c >> 5] | (1 << (c & 31))) >>> 0; return w; }
+function applyMask(perm, w, off) {
+  const o = new Uint32Array(4);
+  for (let k = 0; k < 4; k++) {
+    let x = w[off + k];
+    while (x) { const b = 31 - Math.clz32(x); x = (x & ~(1 << b)) >>> 0; const c = perm[(k << 5) + b]; o[c >> 5] = (o[c >> 5] | (1 << (c & 31))) >>> 0; }
+  }
+  return o;
+}
+const mkey = (w, off = 0) => w[off] + "," + w[off + 1] + "," + w[off + 2] + "," + w[off + 3];
+function bitsOf(w) { const out = []; for (let c = 0; c < 120; c++) if ((w[c >> 5] >>> (c & 31)) & 1) out.push(c); return out; }
+
+/* ---------- E8-scale coordinates ---------- */
+function e8(v) { return "(" + v.map(x => x === 0 ? "0" : (x % 2 === 0 ? String(x / 2) : (x < 0 ? "−½" : "½")).replace("-", "−")).join(", ") + ")"; }
+
+/* ---------- state ---------- */
+const A0 = D.blocks;
+const tokenBlock = new Int8Array(240).fill(-1);
+A0.forEach((b, bi) => b.forEach(c => { tokenBlock[c] = bi; tokenBlock[c + 120] = bi; }));
+let loc = Int16Array.from({ length: 240 }, (_, i) => i);
+let from = P.map(p => p.slice()), to = P.map(p => p.slice()), animT = 1, animStart = 0, animDur = 520;
+let mode = "atlas", selected = 0, hover = -1, steps = 0;
+
+function currentBlocks() {
+  const bl = [[], [], [], []];
+  for (let j = 0; j < 120; j++) if (tokenBlock[j] >= 0) bl[tokenBlock[j]].push(loc[j] % 120);
+  return bl.map(b => b.sort((x, y) => x - y));
+}
+function currentInstance() { return currentBlocks().flat().sort((x, y) => x - y); }
+function blockOfClass(c, bl) { for (let b = 0; b < 4; b++) if (bl[b].includes(c)) return b; return -1; }
+
+/* ---------- tokens and theme ---------- */
+let T = {};
+function readTokens() {
+  const cs = getComputedStyle(document.documentElement);
+  ["bg", "panel", "fg", "muted", "faint", "line", "dot", "accent", "b0", "b1", "b2", "b3"].forEach(k => T[k] = cs.getPropertyValue("--" + k).trim());
+  T.block = [T.b0, T.b1, T.b2, T.b3];
+}
+readTokens();
+
+/* ---------- plane canvas ---------- */
+const plane = document.getElementById("plane"), stage = document.getElementById("stage");
+const pc = plane.getContext("2d");
+let W = 0, R = 0, cx = 0, cy = 0, dpr = 1;
+function sizePlane() {
+  dpr = window.devicePixelRatio || 1;
+  W = stage.clientWidth;
+  plane.width = Math.round(W * dpr); plane.height = Math.round(W * dpr);
+  cx = W / 2; cy = W / 2; R = W / 2 - 14;
+  drawPlane();
+}
+const ease = t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+function tokenPos(j) {
+  const e = ease(animT);
+  const x = from[j][0] + (to[j][0] - from[j][0]) * e, y = from[j][1] + (to[j][1] - from[j][1]) * e;
+  return [cx + x * R, cy - y * R];
+}
+function drawPlane() {
+  if (!W) return;
+  pc.setTransform(dpr, 0, 0, dpr, 0, 0);
+  pc.clearRect(0, 0, W, W);
+  const radii = [0.2088, 0.3383, 0.4161, 0.5029, 0.6183, 0.6727, 0.8135, 1];
+  pc.strokeStyle = T.line; pc.lineWidth = 1;
+  for (const r of radii) { pc.beginPath(); pc.arc(cx, cy, r * R, 0, Math.PI * 2); pc.stroke(); }
+  const small = W < 480 ? 2.6 : 3.4;
+  const bl = currentBlocks();
+  const inst = new Set(bl.flat());
+  const selC = selected;
+  // neighbour lines in ambient mode
+  if (mode === "ambient" && selC >= 0 && animT >= 1) {
+    const base = tokenAtClassPositive(selC);
+    const [x0, y0] = tokenPos(base);
+    pc.lineWidth = 1; pc.strokeStyle = T.accent; pc.globalAlpha = 0.28;
+    for (let j = 0; j < 240; j++) {
+      const c = loc[j] % 120;
+      if (A[selC][c] && dot(roots[loc[j]], roots[loc[base]]) === 4) { const [x, y] = tokenPos(j); pc.beginPath(); pc.moveTo(x0, y0); pc.lineTo(x, y); pc.stroke(); }
+    }
+    pc.globalAlpha = 1;
+  }
+  // dots
+  for (let pass = 0; pass < 2; pass++) {
+    for (let j = 0; j < 240; j++) {
+      const c = loc[j] % 120, b = tokenBlock[j];
+      const inI = b >= 0;
+      if ((pass === 0) === inI && mode !== "ambient") continue;
+      if (mode === "ambient" && pass === 1) continue;
+      const [x, y] = tokenPos(j);
+      let col, r = small, ring = false;
+      if (mode === "ambient") {
+        if (selC >= 0 && c === selC) { col = T.accent; r = small + 1.6; }
+        else if (selC >= 0 && A[selC][c]) col = T.accent;
+        else col = T.dot;
+        ring = isHalf[loc[j]];
+      } else {
+        col = inI ? T.block[b] : T.dot;
+        r = inI ? small + 0.6 : small - 0.6;
+      }
+      pc.beginPath(); pc.arc(x, y, r, 0, Math.PI * 2);
+      if (ring) { pc.strokeStyle = col; pc.lineWidth = 1.6; pc.stroke(); }
+      else { pc.fillStyle = col; pc.fill(); pc.strokeStyle = T.bg; pc.lineWidth = 1; pc.stroke(); }
+    }
+  }
+  // selection rings
+  const ringFor = (c, color, w) => {
+    for (let j = 0; j < 240; j++) if (loc[j] % 120 === c) { const [x, y] = tokenPos(j); pc.beginPath(); pc.arc(x, y, small + 5, 0, Math.PI * 2); pc.strokeStyle = color; pc.lineWidth = w; pc.stroke(); }
+  };
+  if (selC >= 0) ringFor(selC, T.fg, 1.6);
+  if (hover >= 0 && hover !== selC) ringFor(hover, T.muted, 1.2);
+}
+function tokenAtClassPositive(c) { for (let j = 0; j < 240; j++) if (loc[j] === c) return j; return 0; }
+
+function animate(now) {
+  animT = Math.min(1, (now - animStart) / animDur);
+  drawPlane();
+  if (animT < 1) requestAnimationFrame(animate); else { drawPlane(); }
+}
+function applyReflection(r, dur) {
+  const p = rootPerm(r);
+  for (let j = 0; j < 240; j++) { const e = ease(animT); from[j] = [from[j][0] + (to[j][0] - from[j][0]) * e, from[j][1] + (to[j][1] - from[j][1]) * e]; }
+  const nl = new Int16Array(240);
+  for (let j = 0; j < 240; j++) { nl[j] = p[loc[j]]; to[j] = P[nl[j]].slice(); }
+  loc = nl; steps++;
+  if (reduceMotion || dur === 0) { animT = 1; from = to.map(p => p.slice()); drawPlane(); }
+  else { animDur = dur; animT = 0; animStart = performance.now(); requestAnimationFrame(animate); }
+  refreshInstance();
+}
+
+/* ---------- pointer ---------- */
+function nearestClass(ev) {
+  const rect = plane.getBoundingClientRect();
+  const x = ev.clientX - rect.left, y = ev.clientY - rect.top;
+  let best = -1, bd = 14 * 14;
+  for (let j = 0; j < 240; j++) { const [px, py] = tokenPos(j); const d = (px - x) ** 2 + (py - y) ** 2; if (d < bd) { bd = d; best = j; } }
+  return best;
+}
+plane.addEventListener("pointermove", ev => { const j = nearestClass(ev); const c = j >= 0 ? loc[j] % 120 : -1; if (c !== hover) { hover = c; drawPlane(); } });
+plane.addEventListener("pointerleave", () => { hover = -1; drawPlane(); });
+plane.addEventListener("click", ev => {
+  const j = nearestClass(ev); if (j < 0) return;
+  const c = loc[j] % 120;
+  if (mode === "dynamics") { selected = c; applyReflection(loc[j], 520); showEvent(`Reflected through class ${c}.`); }
+  else { selected = c; drawPlane(); }
+  renderSelection();
+});
+
+/* ---------- mode ---------- */
+const modeCopy = {
+  ambient: "E8 has 240 roots. The Atlas identifies each root with its negative, which leaves 120 classes. Two classes are adjacent when their roots are not orthogonal. Every class then has 56 neighbours and 63 classes orthogonal to it, and any two classes share 28 neighbours if adjacent and 24 if not. Select a class to draw its neighbours.",
+  atlas: "An Atlas instance is 48 classes made of four blocks. A block is 12 classes whose roots span four dimensions, which makes it a D4. Blocks 0 and 3 are orthogonal and form one frame; blocks 1 and 2 form the other. The set is tight: a class inside it has 20 neighbours inside, and a class outside it has 24. Select a class to check.",
+  dynamics: "Reflections of E8 permute the 120 classes and carry the Atlas to other instances. Colours travel with the blocks, so you can follow each one. All 75,600 instances lie in one orbit. A walk that returns to the same 48 classes can still bring the blocks back in a different order, and that reordering is a gauge transformation."
+};
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.mode === m)));
+  document.getElementById("modeText").textContent = modeCopy[m];
+  document.getElementById("dynControls").hidden = m !== "dynamics";
+  const lg = document.getElementById("legend");
+  if (m === "ambient") lg.innerHTML = `<span><i class="sw" style="background:var(--dot)"></i>Integer root, in D8 (112)</span><span><i class="sw ring"></i>Half-integer root (128)</span><span><i class="sw" style="background:var(--accent)"></i>Neighbours of the selected class</span>`;
+  else lg.innerHTML = `<span><i class="sw" style="background:var(--b0)"></i>Block 0</span><span><i class="sw" style="background:var(--b3)"></i>Block 3</span><span style="color:var(--faint)">frame 0·3</span><span><i class="sw" style="background:var(--b1)"></i>Block 1</span><span><i class="sw" style="background:var(--b2)"></i>Block 2</span><span style="color:var(--faint)">frame 1·2</span><span><i class="sw" style="background:var(--dot)"></i>Outside (72 classes)</span>`;
+  drawPlane(); renderSelection();
+}
+document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+
+/* ---------- inspector ---------- */
+function kv(el, rows) { el.innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join(""); }
+function renderSelection() {
+  const c = selected, bl = currentBlocks(), inst = new Set(bl.flat());
+  const nb = A[c].reduce((s, x) => s + x, 0);
+  let inside = 0; for (const x of inst) inside += A[c][x];
+  const b = blockOfClass(c, bl);
+  const rows = [["Class", String(c)], ["Root", e8(reps[c]) + " and its negative"], ["Neighbours", `${nb} adjacent, ${119 - nb} orthogonal`]];
+  if (mode !== "ambient") {
+    rows.push(["In the instance", b >= 0 ? `yes, block ${b} (frame ${b === 0 || b === 3 ? "0·3" : "1·2"})` : "no"]);
+    rows.push(["Neighbours inside", `${inside} ${b >= 0 ? "(tight: 20 for an inside class)" : "(tight: 24 for an outside class)"}`]);
+  }
+  document.getElementById("selTitle").textContent = "Selected class";
+  kv(document.getElementById("selKv"), rows);
+  if (placesReady) { renderF2(); renderSquare(); }
+}
+function edges(a, b) { let s = 0; for (const x of a) for (const y of b) s += A[x][y]; return s; }
+function traces(inst) {
+  const n = inst.length, M = inst.map(i => Int32Array.from(inst, j => A[i][j]));
+  const mul = (X, Y) => X.map(row => { const o = new Int32Array(n); for (let k = 0; k < n; k++) { const v = row[k]; if (v) { const yr = Y[k]; for (let j = 0; j < n; j++) o[j] += v * yr[j]; } } return o; });
+  const M2 = mul(M, M), M3 = mul(M2, M), M4 = mul(M3, M);
+  const tr = X => X.reduce((s, row, i) => s + row[i], 0);
+  return [n, tr(M), tr(M2), tr(M3), tr(M4)];
+}
+function closureWitness(inst) {
+  const set = new Set(inst);
+  const rs = []; for (const c of inst) { rs.push(reps[c]); rs.push(reps[c].map(x => -x)); }
+  for (let i = 0; i < rs.length; i++) for (let j = i + 1; j < rs.length; j++) {
+    if (dot(rs[i], rs[j]) !== -4) continue;
+    const s = rs[i].map((x, k) => x + rs[j][k]);
+    const r = rootIndex.get(key(s));
+    if (r !== undefined && !set.has(r % 120)) return [rs[i], rs[j], s];
+  }
+  return null;
+}
+let live = {};
+function refreshInstance() {
+  const bl = currentBlocks(), inst = bl.flat().sort((a, b) => a - b);
+  const q = bl.map(a => bl.map(b => edges(a, b) / 12));
+  const quot = document.getElementById("quot");
+  quot.innerHTML = "<tr><th></th>" + [0, 1, 2, 3].map(b => `<th><i class="sw" style="background:var(--b${b})"></i></th>`).join("") + "</tr>" +
+    q.map((row, a) => `<tr><th>${a}</th>` + row.map(v => `<td class="${v === 0 ? "zero" : ""}">${v}</td>`).join("") + "</tr>").join("");
+  const tr = traces(inst);
+  let tight = true; const instSet = new Set(inst);
+  for (let c = 0; c < 120; c++) { let s = 0; for (const x of inst) s += A[c][x]; if (s !== (instSet.has(c) ? 20 : 24)) tight = false; }
+  const w = maskOf(inst), k = mkey(w);
+  const isA0 = k === A0key;
+  let depth = "mapping…";
+  if (orbit.done || orbit.map.has(k)) { const idx = orbit.map.get(k); depth = idx === undefined ? "not found" : String(orbit.depth[idx]); }
+  let contained = "—";
+  if (census.ready) { contained = String(census.blocks.filter(bk => bitsOf(bk).every(c => instSet.has(c))).length); }
+  live = { tr, tight, q, contained, isA0, inst, w };
+  kv(document.getElementById("instKv"), [
+    ["Identity", isA0 ? "A0, the canonical instance" : "another instance"],
+    ["Distance from A0", depth + (orbit.done || orbit.map.has(k) ? " reflections" : "")],
+    ["Reflections applied", String(steps)],
+    ["Tight (20 in, 24 out)", tight ? "yes, all 120 classes" : "no"],
+    ["Traces of A^0…A^4", tr.join(", ")]
+  ]);
+  document.getElementById("homeBtn").disabled = !orbit.done || isA0;
+  renderSelection(); drawHeat(); renderEvidence(); drawHist(); scheduleScales(); if (deepReady) scheduleDeep();
+}
+
+/* ---------- events ---------- */
+const eventEl = document.getElementById("event");
+function showEvent(html) { eventEl.hidden = false; eventEl.innerHTML = html; }
+let busy = false;
+function runWord(word, stepMs, done) {
+  busy = true; setBusy();
+  let i = 0;
+  const go = () => {
+    if (i >= word.length) { busy = false; setBusy(); done && done(); return; }
+    applyReflection(word[i++], reduceMotion ? 0 : stepMs);
+    setTimeout(go, reduceMotion ? 0 : stepMs + 20);
+  };
+  go();
+}
+function setBusy() {
+  ["walkBtn", "resetBtn", "frameBtn"].forEach(id => document.getElementById(id).disabled = busy);
+  if (deepReady && orbit.done) document.getElementById("triRun").disabled = busy;
+  document.getElementById("gaugeBtn").disabled = busy || !orbit.done;
+  document.getElementById("homeBtn").disabled = busy || !orbit.done || live.isA0;
+  document.querySelectorAll("#simpleBtns button").forEach(b => b.disabled = busy);
+}
+const sb = document.getElementById("simpleBtns");
+simpleRoot.forEach((r, i) => { const b = document.createElement("button"); b.className = "btn simple"; b.textContent = "s" + (i + 1); b.title = "Reflect through simple root " + (i + 1) + " " + e8(roots[r]); b.addEventListener("click", () => { applyReflection(r, 520); showEvent(`Reflected through simple root s${i + 1} = ${e8(roots[r])}.`); }); sb.appendChild(b); });
+document.getElementById("walkBtn").addEventListener("click", () => {
+  const word = Array.from({ length: 12 }, () => simpleRoot[Math.floor(Math.random() * 8)]);
+  runWord(word, 260, () => showEvent(`Walked 12 random simple reflections. The instance is now ${live.isA0 ? "A0 again" : "at distance " + (orbit.done ? orbit.depth[orbit.map.get(mkey(live.w))] : "?") + " from A0"}, and it is still tight with the same block matrix.`));
+});
+document.getElementById("resetBtn").addEventListener("click", () => {
+  loc = Int16Array.from({ length: 240 }, (_, i) => i); from = P.map(p => p.slice()); to = P.map(p => p.slice()); animT = 1; steps = 0;
+  eventEl.hidden = true; refreshInstance(); drawPlane();
+});
+function pathToRoot(idx) { const w = []; while (orbit.parent[idx] >= 0) { w.push(orbit.gen[idx]); idx = orbit.parent[idx]; } return w.reverse(); }
+function blockPermutationReport() {
+  const bl = currentBlocks();
+  const map = bl.map(b => A0.findIndex(a => a.length === b.length && a.every((x, i) => x === b[i])));
+  const moved = [];
+  for (let b = 0; b < 4; b++) if (map[b] !== b) moved.push(`block ${b} → position of block ${map[b]}`);
+  let classesMoved = 0; for (let j = 0; j < 120; j++) if (tokenBlock[j] >= 0 && loc[j] % 120 !== j) classesMoved++;
+  const frames = new Set([[0, 3], [1, 2]].map(([a, b]) => [map[a], map[b]].sort().join("·")));
+  const keepsFrames = frames.has("0·3") && frames.has("1·2");
+  return { moved, classesMoved, keepsFrames };
+}
+document.getElementById("homeBtn").addEventListener("click", () => {
+  const idx = orbit.map.get(mkey(live.w)); if (idx === undefined) return;
+  const word = pathToRoot(idx).reverse().map(g => simpleRoot[g]);
+  runWord(word, 240, () => {
+    const r = blockPermutationReport();
+    showEvent(`<strong>Home in ${word.length} reflections.</strong> The 48 classes are A0's again. ` + (r.moved.length ? `The blocks came back reordered: ${r.moved.join("; ")}. ${r.keepsFrames ? "The two frames are preserved." : ""}` : "Each block is back in its own place."));
+  });
+});
+document.getElementById("gaugeBtn").addEventListener("click", () => {
+  // reset to A0 first, then run t(m)·g·t(n)^-1 where (m,g,n) is a non-tree edge of the orbit map
+  document.getElementById("resetBtn").click();
+  const r0 = randomGaugeWord(); if (!r0) return;
+  const word = r0.wd;
+  showEvent(`Running a closed loop of ${word.length} simple reflections from A0…`);
+  runWord(word.map(g => simpleRoot[g]), 90, () => {
+    tallyGauge(r0.perm); renderGauge(); renderEvidence();
+    const sym = SYMS.find(s => s.p.join("") === gauge.last);
+    const r = blockPermutationReport();
+    showEvent(`<strong>Back at A0 after ${word.length} reflections.</strong> The same 48 classes, but ${r.classesMoved} of them changed place. ` + (r.moved.length ? `Blocks: ${r.moved.join("; ")}. ` : "Each block maps to itself, shuffled inside. ") + `On the gauge square this is ${sym.cyc}, ${sym.what}. The loop is one of A0's 4,608 endomorphisms.`);
+  });
+});
+
+/* ---------- orbit BFS (chunked) ---------- */
+const A0mask = maskOf(A0.flat()), A0key = mkey(A0mask);
+const CAP = 76000;
+const orbit = { blocks: new Uint32Array(CAP * 16), masks: new Uint32Array(CAP * 4), parent: new Int32Array(CAP), gen: new Int8Array(CAP), depth: new Uint8Array(CAP), map: new Map(), count: 0, head: 0, done: false, hist: [] };
+function orbitAdd(w, parent, g, d, bw) { const i = orbit.count++; orbit.masks.set(w, i * 4); orbit.blocks.set(bw, i * 16); orbit.parent[i] = parent; orbit.gen[i] = g; orbit.depth[i] = d; orbit.map.set(mkey(w), i); orbit.hist[d] = (orbit.hist[d] || 0) + 1; }
+orbitAdd(A0mask, -1, -1, 0, Uint32Array.from(A0.flatMap(b => Array.from(maskOf(b)))));
+function orbitChunk() {
+  const end = Math.min(orbit.count, orbit.head + 2500);
+  for (; orbit.head < end; orbit.head++) {
+    const m = orbit.head;
+    for (let g = 0; g < 8; g++) {
+      const n = applyMask(simpleClassPerm[g], orbit.masks, m * 4), k = mkey(n);
+      if (!orbit.map.has(k)) { if (orbit.count >= CAP) { orbit.overflow = true; continue; } const bw = new Uint32Array(16); for (let b = 0; b < 4; b++) bw.set(applyMask(simpleClassPerm[g], orbit.blocks, m * 16 + b * 4), b * 4); orbitAdd(n, m, g, orbit.depth[m] + 1, bw); }
+    }
+  }
+  document.getElementById("prog").style.width = Math.min(100, orbit.count / 75600 * 100) + "%";
+  if (orbit.head < orbit.count) { document.getElementById("orbitStatus").textContent = `Mapping the orbit: ${orbit.count.toLocaleString()} instances found`; drawHist(); setTimeout(orbitChunk, 0); }
+  else { orbit.done = true; finishOrbit(); }
+}
+function finishOrbit() {
+  const n = orbit.count;
+  document.getElementById("orbitStatus").textContent = `Orbit mapped: ${n.toLocaleString()} instances, farthest ${orbit.hist.length - 1} reflections from A0.`;
+  document.getElementById("orbitArith").textContent = `348,364,800 ÷ ${n.toLocaleString()} = ${(348364800 / n).toLocaleString()}`;
+  kv(document.getElementById("orbitKv"), [["Remainder", String(348364800 % n)], ["Gauge order", `${348364800 / n} = 2^9 · 3^2 (Parameters.T30)`], ["Most common distance", (() => { let b = 0; orbit.hist.forEach((v, i) => { if (v > orbit.hist[b]) b = i; }); return `${b} (${orbit.hist[b].toLocaleString()} instances)`; })()]]);
+  setBusy(); refreshInstance();
+  document.getElementById("sampleBtn").disabled = false; setTimeout(() => sampleGauge(200), 30);
+  setTimeout(() => { if (deepReady) deepAfterOrbit(); }, 80);
+}
+
+/* ---------- block census ---------- */
+const census = { ready: false, blocks: [], frames: 0 };
+function runCensus() {
+  const seen = new Map(), list = [];
+  const b0 = maskOf(A0[0]); seen.set(mkey(b0), 0); list.push(b0);
+  for (let h = 0; h < list.length; h++) for (let g = 0; g < 8; g++) { const n = applyMask(simpleClassPerm[g], list[h], 0), k = mkey(n); if (!seen.has(k)) { seen.set(k, list.length); list.push(n); } }
+  let pairs = 0, allBlocks = true;
+  for (const bk of list) {
+    const cl = bitsOf(bk); const comp = [];
+    for (let j = 0; j < 120; j++) if (!cl.includes(j) && cl.every(i => !A[i][j])) comp.push(j);
+    if (comp.length === 12 && seen.has(mkey(maskOf(comp)))) pairs++; else allBlocks = false;
+  }
+  census.blocks = list; census.frames = allBlocks ? pairs / 2 : NaN; census.ready = true;
+}
+
+/* ---------- histogram ---------- */
+const hist = document.getElementById("hist"), hc = hist.getContext("2d"), histTip = document.getElementById("histTip");
+let histBars = [];
+function drawHist() {
+  const wrap = document.getElementById("histWrap"), w = wrap.clientWidth, h = 260, d = window.devicePixelRatio || 1;
+  hist.width = Math.round(w * d); hist.height = Math.round(h * d); hist.style.height = h + "px";
+  hc.setTransform(d, 0, 0, d, 0, 0); hc.clearRect(0, 0, w, h);
+  const L = 44, Rm = 8, Tp = 12, B = 34, pw = w - L - Rm, ph = h - Tp - B;
+  const maxY = 6000, n = 31, bw = pw / n;
+  hc.font = "11px " + getComputedStyle(document.body).getPropertyValue("--mono"); hc.fillStyle = T.muted; hc.strokeStyle = T.line; hc.lineWidth = 1;
+  hc.textAlign = "right"; hc.textBaseline = "middle";
+  for (const v of [0, 2000, 4000, 6000]) { const y = Tp + ph - v / maxY * ph; hc.beginPath(); hc.moveTo(L, y + 0.5); hc.lineTo(L + pw, y + 0.5); hc.stroke(); hc.fillText(v.toLocaleString(), L - 6, y); }
+  hc.textAlign = "center"; hc.textBaseline = "top";
+  for (let x = 0; x <= 30; x += 5) hc.fillText(String(x), L + (x + 0.5) * bw, Tp + ph + 6);
+  hc.fillText("reflections from A0", L + pw / 2, Tp + ph + 20);
+  let curD = -1; if (live.w) { const i = orbit.map.get(mkey(live.w)); if (i !== undefined) curD = orbit.depth[i]; }
+  histBars = [];
+  for (let x = 0; x < n; x++) {
+    const v = orbit.hist[x] || 0, bh = v / maxY * ph, bx = L + x * bw + 1, by = Tp + ph - bh, bwid = Math.max(1, bw - 2);
+    hc.fillStyle = x === curD ? T.accent : T.dot;
+    if (bh > 0) { hc.beginPath(); const r = Math.min(4, bwid / 2, bh); hc.moveTo(bx, Tp + ph); hc.lineTo(bx, by + r); hc.quadraticCurveTo(bx, by, bx + r, by); hc.lineTo(bx + bwid - r, by); hc.quadraticCurveTo(bx + bwid, by, bx + bwid, by + r); hc.lineTo(bx + bwid, Tp + ph); hc.closePath(); hc.fill(); }
+    histBars.push({ x0: L + x * bw, x1: L + (x + 1) * bw, d: x, v, top: by });
+  }
+  if (curD >= 0) { const b = histBars[curD]; hc.fillStyle = T.fg; hc.textAlign = "center"; hc.textBaseline = "bottom"; hc.fillText("current", (b.x0 + b.x1) / 2, Math.max(Tp + 10, b.top - 4)); }
+}
+hist.addEventListener("pointermove", ev => {
+  const r = hist.getBoundingClientRect(), x = ev.clientX - r.left;
+  const b = histBars.find(b => x >= b.x0 && x < b.x1);
+  if (!b) { histTip.hidden = true; return; }
+  histTip.hidden = false; histTip.textContent = `distance ${b.d}: ${b.v.toLocaleString()} instances`;
+  histTip.style.left = ((b.x0 + b.x1) / 2) + "px"; histTip.style.top = Math.max(18, b.top) + "px";
+});
+hist.addEventListener("pointerleave", () => histTip.hidden = true);
+
+/* ---------- heatmap ---------- */
+const heat = document.getElementById("heat"), hm = heat.getContext("2d");
+function drawHeat() {
+  const w = Math.min(heat.parentElement.clientWidth, 480), d = window.devicePixelRatio || 1;
+  heat.width = Math.round(w * d); heat.height = Math.round(w * d); heat.style.width = w + "px"; heat.style.height = w + "px";
+  hm.setTransform(d, 0, 0, d, 0, 0); hm.clearRect(0, 0, w, w);
+  const bl = currentBlocks(), inSet = new Set(bl.flat());
+  const order = bl.flat().concat([...Array(120).keys()].filter(c => !inSet.has(c)));
+  const blockOf = new Int8Array(120).fill(-1); bl.forEach((b, i) => b.forEach(c => blockOf[c] = i));
+  const s = w / 120;
+  hm.fillStyle = T.panel; hm.fillRect(0, 0, w, w);
+  for (let i = 0; i < 120; i++) for (let j = 0; j < 120; j++) {
+    const a = order[i], b = order[j]; if (!A[a][b]) continue;
+    const ba = blockOf[a], bb = blockOf[b];
+    hm.fillStyle = ba >= 0 && ba === bb ? T.block[ba] : (ba >= 0 && bb >= 0 ? T.muted : T.dot);
+    hm.fillRect(j * s, i * s, Math.max(1, s - 0.4), Math.max(1, s - 0.4));
+  }
+  hm.strokeStyle = T.fg; hm.lineWidth = 1; hm.globalAlpha = 0.5;
+  for (const k of [12, 24, 36, 48]) { hm.beginPath(); hm.moveTo(k * s, 0); hm.lineTo(k * s, w); hm.moveTo(0, k * s); hm.lineTo(w, k * s); hm.stroke(); }
+  hm.globalAlpha = 1;
+}
+
+/* ---------- evidence table ---------- */
+function renderEvidence() {
+  const ok = c => c ? '<span class="pill ok">✓ match</span>' : '<span class="pill">pending</span>';
+  let deg = true, lam = true, mu = true;
+  for (let i = 0; i < 120 && (deg && lam && mu); i++) { let dsum = 0; for (let j = 0; j < 120; j++) dsum += A[i][j]; if (dsum !== 56) deg = false; }
+  const rows = [
+    ["E8 has 240 roots of norm 8 at scale 2", "Roots.T5", "240", String(rootIndex.size), rootIndex.size === 240],
+    ["Every class has 56 neighbours; λ = 28, μ = 24", "Roots.T8", "(120, 56, 28, 24)", srg, srg === "(120, 56, 28, 24)"],
+    ["Blocks (12 classes spanning rank 4)", "Census.T22", "3,150", census.ready ? census.blocks.length.toLocaleString() : "…", census.ready && census.blocks.length === 3150],
+    ["Frames (orthogonal block pairs)", "Closure.T23", "1,575", census.ready ? census.frames.toLocaleString() : "…", census.frames === 1575],
+    ["An instance has 48 classes", "Blocks.T12", "48", String(live.inst ? live.inst.length : "…"), live.inst && live.inst.length === 48],
+    ["Tight: 20 neighbours inside, 24 outside (live)", "Blocks.T10b", "every class", live.tight ? "every class" : "fails", !!live.tight],
+    ["Block matrix: 8 on the diagonal, 0 at the frame partner, rows sum to 20 (live)", "Blocks.T16x, T17", "8 · 6 · 6 · 0", live.q ? live.q[0].join(" · ") : "…", live.q && live.q.every(r => r.reduce((a, b) => a + b) === 20 && r.filter(v => v === 8).length === 1 && r.filter(v => v === 0).length === 1)],
+    ["Traces of the instance adjacency, powers 0–4 (live)", "Blocks.SpecV (T20)", "48, 0, 960, 8448, 175104", live.tr ? live.tr.join(", ") : "…", live.tr && live.tr.join() === "48,0,960,8448,175104"],
+    ["The instance's 96 roots are not closed under addition (live)", "Blocks.T21", "not closed", witnessText(), !!closure],
+    ["Blocks contained in the instance (live)", "Closure.T25", "4", census.ready ? live.contained : "…", live.contained === "4"],
+    ["Instances", "Closure.T24", "75,600", orbit.done ? orbit.count.toLocaleString() : "…", orbit.done && orbit.count === 75600],
+    ["All instances form one orbit of the reflection group", "Closure.T27", "one orbit", orbit.done ? "reached from A0" : "…", orbit.done && orbit.count === 75600],
+    ["Gauge group order", "gaugeOrderW0, T55", "4,608", orbit.done ? (348364800 / orbit.count).toLocaleString() : "…", orbit.done && 348364800 / orbit.count === 4608],
+    ["Orderings of an instance's blocks (presentations)", "presentation_fibre_24", "24", census.ready ? String([1, 2, 3, 4].slice(0, +live.contained).reduce((a, b) => a * b, 1)) : "…", live.contained === "4"]
+  ];
+  rows.push(...scaleEvidenceRows());
+  if (placesReady) rows.push(...placeEvidenceRows());
+  if (deepReady) rows.push(...deepEvidenceRows());
+  document.querySelector("#evidence tbody").innerHTML = rows.map(r => `<tr><td>${r[0]}</td><td class="mono">${r[1]}</td><td class="mono">${r[2]}</td><td class="mono">${r[3]}</td><td>${ok(r[4])}</td></tr>`).join("");
+}
+let closure = null;
+function witnessText() { closure = live.inst ? closureWitness(live.inst) : null; if (!closure) return "…"; return `${e8(closure[0])} + ${e8(closure[1])} is a root outside`; }
+
+/* ---------- SRG check ---------- */
+let srg = "…";
+(function () {
+  const deg = new Set(), lam = new Set(), mu = new Set();
+  for (let i = 0; i < 120; i++) { let d = 0; for (let j = 0; j < 120; j++) d += A[i][j]; deg.add(d);
+    for (let j = i + 1; j < 120; j++) { let c = 0; for (let k = 0; k < 120; k++) c += A[i][k] & A[j][k]; (A[i][j] ? lam : mu).add(c); } }
+  if (deg.size === 1 && lam.size === 1 && mu.size === 1) srg = `(120, ${[...deg][0]}, ${[...lam][0]}, ${[...mu][0]})`;
+})();
+
+/* ---------- modular rank (exact ranks over GF(p)) ---------- */
+const PR = 1000003;
+function modInv(a) { let t = 0, nt = 1, r = PR, nr = ((a % PR) + PR) % PR; while (nr) { const q = Math.floor(r / nr); [t, nt] = [nt, t - q * nt]; [r, nr] = [nr, r - q * nr]; } return ((t % PR) + PR) % PR; }
+function rankMod(rows) {
+  const M = rows.map(r => r.map(x => ((x % PR) + PR) % PR)), n = M.length, m = n ? M[0].length : 0;
+  let rank = 0;
+  for (let c = 0; c < m && rank < n; c++) {
+    let p = -1; for (let r = rank; r < n; r++) if (M[r][c]) { p = r; break; }
+    if (p < 0) continue;
+    [M[rank], M[p]] = [M[p], M[rank]];
+    const row = M[rank], inv = modInv(row[c]);
+    for (let k = c; k < m; k++) row[k] = row[k] * inv % PR;
+    for (let r = 0; r < n; r++) if (r !== rank && M[r][c]) { const f = M[r][c], rr = M[r]; for (let k = c; k < m; k++) { let v = (rr[k] - f * row[k]) % PR; if (v < 0) v += PR; rr[k] = v; } }
+    rank++;
+  }
+  return rank;
+}
+const CAND = [56, 32, 20, 8, 4, 0, -4];
+function spectrum(S) {
+  const n = S.length, out = []; let tot = 0;
+  for (const l of CAND) { const m = n - rankMod(S.map((a, i) => S.map((b, j) => A[a][b] - (i === j ? l : 0)))); if (m > 0) { out.push([l, m]); tot += m; } }
+  return { out, ok: tot === n };
+}
+const TRI = []; for (let i = 0; i < 8; i++) for (let j = i; j < 8; j++) TRI.push([i, j]);
+function spanRank(S) { return rankMod(S.map(c => TRI.map(([i, j]) => reps[c][i] * reps[c][j]))); }
+function frameSum(S) { const F = Array.from({ length: 8 }, () => new Array(8).fill(0)); for (const c of S) for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) F[i][j] += reps[c][i] * reps[c][j]; return F; }
+function scalarOf(F) { const d = F[0][0]; for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) if (F[i][j] !== (i === j ? d : 0)) return null; return d; }
+const SUP = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
+const sup = n => String(n).split("").map(c => SUP[c]).join("");
+const specStr = out => out.map(([l, m]) => (l < 0 ? "−" + (-l) : l) + sup(m)).join(" ");
+const rampOf = l => l > 8 ? 0 : l === 8 ? 1 : l === 4 ? 2 : l === 0 ? 3 : 4;
+const fmtQ = x => Number.isInteger(x) ? String(x) : x.toFixed(2);
+
+/* ---------- orthogonal 8-frames ---------- */
+const ORTH = []; for (let i = 0; i < 120; i++) { ORTH.push(new Uint8Array(120)); for (let j = 0; j < 120; j++) ORTH[i][j] = i !== j && dot(reps[i], reps[j]) === 0 ? 1 : 0; }
+const frames8 = [];
+(function () {
+  function ext(cl, cands) {
+    if (cl.length === 8) { frames8.push(cl.slice()); return; }
+    if (cl.length + cands.length < 8) return;
+    for (let i = 0; i < cands.length; i++) { const c = cands[i], nc = []; for (let j = i + 1; j < cands.length; j++) if (ORTH[c][cands[j]]) nc.push(cands[j]); cl.push(c); ext(cl, nc); cl.pop(); }
+  }
+  ext([], [...Array(120).keys()]);
+})();
+function covers(fr, U, limit) {
+  const out = [], rem = new Set(U);
+  (function go(chosen) {
+    if (out.length >= limit) return;
+    if (rem.size === 0) { out.push(chosen.slice()); return; }
+    let m = Infinity; for (const x of rem) if (x < m) m = x;
+    for (const f of fr) { if (!f.includes(m) || !f.every(x => rem.has(x))) continue; f.forEach(x => rem.delete(x)); chosen.push(f); go(chosen); chosen.pop(); f.forEach(x => rem.add(x)); }
+  })([]);
+  return out;
+}
+function fourFrames(block) { let n = 0; for (let a = 0; a < 12; a++) for (let b = a + 1; b < 12; b++) for (let c = b + 1; c < 12; c++) for (let d = c + 1; d < 12; d++) { const s = [block[a], block[b], block[c], block[d]]; if (ORTH[s[0]][s[1]] && ORTH[s[0]][s[2]] && ORTH[s[0]][s[3]] && ORTH[s[1]][s[2]] && ORTH[s[1]][s[3]] && ORTH[s[2]][s[3]]) n++; } return n; }
+
+/* ---------- scales ---------- */
+const EXPECT = { K: "56¹ 8³⁵ −4⁸⁴", res: "32¹ 8⁶ 4¹⁸ 0⁹ −4³⁸", inst: "20¹ 8² 4⁹ 0¹⁸ −4¹⁸", frame: "8² 0¹⁸ −4⁴", block: "8¹ 0⁹ −4²" };
+const EXPECT_RANK = { K: 36, res: 34, inst: 30, frame: 20, block: 10 };
+const kScale = (() => { const S = [...Array(120).keys()]; return { spec: spectrum(S), rank: spanRank(S), fs: scalarOf(frameSum(S)) }; })();
+let scaleData = null, spreadState = { inst: [], res: [], i: 0, key: "" }, scaleTimer = 0;
+function scheduleScales() { clearTimeout(scaleTimer); scaleTimer = setTimeout(computeScales, busy ? 400 : 60); }
+function computeScales() {
+  if (busy) { scheduleScales(); return; }
+  const bl = currentBlocks(), inst = bl.flat().sort((a, b) => a - b), set = new Set(inst);
+  const res = [...Array(120).keys()].filter(c => !set.has(c)), frame = bl[0].concat(bl[3]).sort((a, b) => a - b), block = bl[0];
+  const lv = [
+    { id: "K", name: "All classes", n: 120, sub: "the ambient root classes", S: null },
+    { id: "res", name: "Residue", n: 72, sub: "the classes outside the instance", S: res },
+    { id: "inst", name: "Instance", n: 48, sub: "the current Atlas instance", S: inst },
+    { id: "frame", name: "Frame", n: 24, sub: "blocks 0 and 3", S: frame },
+    { id: "block", name: "Block", n: 12, sub: "block 0, a D4", S: block }
+  ];
+  for (const L of lv) {
+    if (!L.S) { L.spec = kScale.spec; L.rank = kScale.rank; L.fs = kScale.fs; continue; }
+    L.spec = spectrum(L.S); L.rank = spanRank(L.S); L.fs = scalarOf(frameSum(L.S));
+  }
+  const fin = frames8.filter(f => f.every(c => set.has(c))), fres = frames8.filter(f => f.every(c => !set.has(c)));
+  const key = mkey(maskOf(inst));
+  if (spreadState.key !== key) { spreadState = { key, inst: covers(fin, inst, 2000), res: covers(fres, res, 400), i: 0, fin }; }
+  scaleData = { lv, fin, fres, four: fourFrames(block), thru0: frames8.filter(f => f.includes(0)).length };
+  renderScales(); renderSpread(); renderParams(); renderEvidence();
+}
+function renderScales() {
+  if (!scaleData) return;
+  document.getElementById("rkey").innerHTML = [["the degree (56, 32, 20)", 0], ["8", 1], ["4", 2], ["0", 3], ["−4: relations among the projectors", 4]].map(([t, i]) => `<span><i style="background:var(--s${i})"></i>${t}</span>`).join("");
+  const parts = { K: "15 orthogonal 8-frames", res: "9 orthogonal 8-frames", inst: "6 orthogonal 8-frames", frame: "3 orthogonal 8-frames", block: `${scaleData.four} orthogonal 4-sets` };
+  document.getElementById("ladder").innerHTML = scaleData.lv.map(L => {
+    const bar = L.spec.out.map(([l, m]) => `<span title="λ = ${l}, multiplicity ${m}" style="flex:${m} 1 0;background:var(--s${rampOf(l)})"></span>`).join("");
+    const gram = L.spec.out.filter(([l]) => l !== -4).map(([l, m]) => fmtQ(1 + l / 4) + sup(m)).join(" ") + (36 - L.rank > 0 ? " 0" + sup(36 - L.rank) : "");
+    const meter = Array.from({ length: 36 }, (_, i) => `<i class="${i < L.rank ? "on" : ""}"></i>`).join("");
+    const m4 = (L.spec.out.find(([l]) => l === -4) || [0, 0])[1];
+    const fsText = L.fs !== null ? `ΣP<sub>x</sub> = ${L.fs / 8}·I` : "ΣP<sub>x</sub> is 3× a rank-4 projector";
+    return `<div class="rung">
+      <div><h4>${L.name} · ${L.n}</h4><div class="sub">${L.sub}</div><div class="sub">${parts[L.id]}</div></div>
+      <div style="min-width:0"><div class="specbar">${bar}</div><div class="spectext">adjacency ${specStr(L.spec.out)}</div><div class="spectext" style="color:var(--muted)">projector operator on Sym(8): ${gram}</div></div>
+      <div style="display:grid;gap:6px"><div class="meter" aria-label="span ${L.rank} of 36">${meter}</div><div class="spectext">span ${L.n} − ${m4} = ${L.rank} of 36</div><div class="spectext">${fsText}</div></div>
+    </div>`;
+  }).join("");
+}
+function renderSpread() {
+  const st = spreadState; if (!st.inst.length || !st.res.length) return;
+  const bl = currentBlocks(), bOf = new Int8Array(120).fill(-1); bl.forEach((b, i) => b.forEach(c => bOf[c] = i));
+  const ins = st.inst[st.i % st.inst.length], rs = st.res[st.i % st.res.length];
+  const pat = f => { const cnt = [0, 0, 0, 0]; f.forEach(c => cnt[bOf[c]]++); return cnt.filter(x => x).length === 4 ? "2·2·2·2" : "4·4"; };
+  const col = (f, isIn, k) => `<div class="col${k === 6 ? " gap" : ""}">` + f.map(c => `<b title="class ${c}" style="background:var(${isIn ? "--b" + bOf[c] : "--dot"})"></b>`).join("") + `<div class="lab">${isIn ? pat(f) : "res"}</div></div>`;
+  document.getElementById("spread").innerHTML = ins.map((f, k) => col(f, true, k)).join("") + rs.map((f, k) => col(f, false, k + 6)).join("");
+  const n44 = st.fin.filter(f => pat(f) === "4·4").length;
+  document.getElementById("spreadNote").textContent = `Split ${st.i % st.inst.length + 1} of the instance's ${st.inst.length}. Of its 36 frames, ${36 - n44} take two classes from every block and ${n44} take four classes from each block of one frame. Columns are coloured by block; grey columns are the residue.`;
+}
+document.getElementById("spreadBtn").addEventListener("click", () => { spreadState.i++; renderSpread(); });
+
+/* ---------- gauge square ---------- */
+const POS = [[50, 50], [210, 50], [50, 210], [210, 210]]; // corners for blocks 0,1,2,3 (0 TL, 1 TR, 2 BL, 3 BR)
+const SYMS = [
+  { p: [0, 1, 2, 3], cyc: "e", what: "identity" },
+  { p: [1, 3, 0, 2], cyc: "(0 1 3 2)", what: "quarter turn, swaps frames" },
+  { p: [3, 2, 1, 0], cyc: "(0 3)(1 2)", what: "half turn, keeps frames" },
+  { p: [2, 0, 3, 1], cyc: "(0 2 3 1)", what: "quarter turn, swaps frames" },
+  { p: [0, 2, 1, 3], cyc: "(1 2)", what: "flip across the 0·3 diagonal" },
+  { p: [3, 1, 2, 0], cyc: "(0 3)", what: "flip across the 1·2 diagonal" },
+  { p: [1, 0, 3, 2], cyc: "(0 1)(2 3)", what: "flip, swaps frames" },
+  { p: [2, 3, 0, 1], cyc: "(0 2)(1 3)", what: "flip, swaps frames" }
+];
+const gauge = { tally: new Map(), samples: 0, last: null, orbits: null };
+function squareSvg(perm, big) {
+  const s = big ? 1 : 72 / 260, r = big ? 16 : 7;
+  const P2 = i => POS[i].map(v => v * s);
+  let g = `<rect class="sq-line" x="${50 * s}" y="${50 * s}" width="${160 * s}" height="${160 * s}"/>`;
+  g += `<line class="sq-diag" x1="${P2(0)[0]}" y1="${P2(0)[1]}" x2="${P2(3)[0]}" y2="${P2(3)[1]}"/><line class="sq-diag" x1="${P2(1)[0]}" y1="${P2(1)[1]}" x2="${P2(2)[0]}" y2="${P2(2)[1]}"/>`;
+  for (let b = 0; b < 4; b++) { const [x, y] = P2(perm[b]); g += `<circle cx="${x}" cy="${y}" r="${r}" style="fill:var(--b${b})"/>`; if (big) g += `<text class="sq-txt" x="${x + (x < 130 ? -24 : 24)}" y="${y + 4}" text-anchor="middle">${b}</text>`; }
+  if (big) {
+    g += `<text class="sq-sub" x="130" y="40" text-anchor="middle">6 edges per class</text><text class="sq-sub" x="130" y="232" text-anchor="middle">6 edges per class</text>`;
+    g += `<text class="sq-sub" x="130" y="266" text-anchor="middle">dashed diagonals: the frames, 0 edges</text>`;
+  }
+  return g;
+}
+document.getElementById("sqBig").innerHTML = squareSvg([0, 1, 2, 3], true);
+function blockPermOf(perm) { return A0.map(b => { const img = b.map(c => perm[c]).sort((x, y) => x - y); return A0.findIndex(a => a.every((x, i) => x === img[i])); }); }
+function randomGaugeWord() {
+  for (let tries = 0; tries < 400; tries++) {
+    const m = Math.floor(Math.random() * orbit.count), g = Math.floor(Math.random() * 8);
+    const n = orbit.map.get(mkey(applyMask(simpleClassPerm[g], orbit.masks, m * 4)));
+    if (orbit.parent[n] === m && orbit.gen[n] === g) continue;
+    const wd = pathToRoot(m).concat([g], pathToRoot(n).reverse());
+    let perm = Int16Array.from({ length: 120 }, (_, i) => i);
+    for (const s of wd) perm = perm.map(x => simpleClassPerm[s][x]);
+    let moves = false; for (let c = 0; c < 120; c++) if (perm[c] !== c) { moves = true; break; }
+    if (moves) return { wd, perm };
+  }
+  return null;
+}
+function tallyGauge(perm) {
+  const bp = blockPermOf(perm), k = bp.join("");
+  gauge.tally.set(k, (gauge.tally.get(k) || 0) + 1); gauge.samples++; gauge.last = k;
+}
+function sampleGauge(n) {
+  const perms = [];
+  // each sample is a product of one to three closed walks, so it is itself a gauge transformation
+  for (let i = 0; i < n; i++) { const perm = gaugeRandomPerm(); tallyGauge(perm); perms.push(perm); }
+  if (!gauge.orbits) {
+    const par = [...Array(120).keys()], find = x => par[x] === x ? x : (par[x] = find(par[x]));
+    for (const p of perms.slice(0, 80)) for (let c = 0; c < 120; c++) { const a = find(c), b = find(p[c]); if (a !== b) par[a] = b; }
+    const sz = new Map(); for (let c = 0; c < 120; c++) { const r = find(c); sz.set(r, (sz.get(r) || 0) + 1); }
+    gauge.orbits = [...sz.values()].sort((a, b) => a - b);
+  }
+  renderGauge(); renderEvidence();
+}
+function renderGauge() {
+  document.getElementById("minis").innerHTML = SYMS.map(s => {
+    const k = s.p.join(""), n = gauge.tally.get(k) || 0;
+    return `<div class="mini${gauge.last === k ? " hit" : ""}"><svg viewBox="0 0 72 72">${squareSvg(s.p, false)}</svg><div class="cyc">${s.cyc}</div><div class="what">${s.what}</div><div class="n">${n} sampled</div></div>`;
+  }).join("");
+  const seen = SYMS.filter(s => gauge.tally.get(s.p.join(""))).length;
+  kv(document.getElementById("gaugeKv"), [
+    ["Gauge transformations", orbit.done ? `${(348364800 / orbit.count).toLocaleString()} (gaugeOrderW0)` : "mapping…"],
+    ["Sampled so far", gauge.samples.toLocaleString()],
+    ["Block arrangements seen", `${seen} of 8`],
+    ["Fixing every block", "576, a normal subgroup of index 8 (T39, T54)"],
+    ["Orbits on the 120 classes", gauge.orbits ? gauge.orbits.join(" + ") + " (the instance and its residue)" : "…"],
+    ["Centre", "order 2 (T55)"],
+    ["Structure", "solvable, not nilpotent (T55)"]
+  ]);
+}
+document.getElementById("sampleBtn").addEventListener("click", () => sampleGauge(200));
+
+/* ---------- parameters ---------- */
+function renderParams() {
+  if (!scaleData) return;
+  const inst = live.inst || [], half = roots.filter((r, i) => isHalf[i]).length;
+  const rows = [
+    ["D2", "O", "least n > 0 with 8 | n", 8, "coordinates in every root vector", "8"],
+    ["D3", "T", "log₂ O", 3, "orthogonal 4-sets splitting block 0 (S2: |block| = T·4)", String(scaleData.four)],
+    ["D4", "", "T·O", 24, "roots in a block, 12 classes × 2", String(2 * currentBlocks()[0].length)],
+    ["D5", "", "2^(O − 2T)", 4, "blocks in an instance (T25)", String(live.contained)],
+    ["D6", "", "D5 · D4", 96, "roots in an instance (T13)", String(2 * inst.length)],
+    ["D7", "", "2^(O − 1)", 128, "half-integer roots of E8", String(half)],
+    ["D8", "", "D6 · D7", 12288, "48 instance classes × 256 (T4)", (inst.length * 256).toLocaleString()]
+  ];
+  document.getElementById("params").innerHTML = "<thead><tr><th>Label</th><th>Definition</th><th>Value</th><th>The same number here</th><th>Count</th></tr></thead><tbody>" +
+    rows.map(r => `<tr><td class="mono">${r[0]}${r[1] ? " · " + r[1] : ""}</td><td>${r[2]}</td><td class="v">${r[3].toLocaleString()}</td><td>${r[4]}</td><td class="mono">${r[5]}</td></tr>`).join("") + "</tbody>";
+}
+function scaleEvidenceRows() {
+  if (!scaleData) return [
+    ["Adjacency spectra at five scales (live)", "Scales.S18, S21, S32", "…", "…", false]
+  ];
+  const lv = scaleData.lv, spOK = lv.every(L => specStr(L.spec.out) === EXPECT[L.id]), rkOK = lv.every(L => L.rank === EXPECT_RANK[L.id]);
+  const fsOK = lv.slice(0, 4).every(L => L.fs === L.n);
+  const seen = SYMS.filter(s => gauge.tally.get(s.p.join(""))).length;
+  return [
+    ["Adjacency spectra at five scales (live)", "Scales.S18, S21, S32", lv.map(L => EXPECT[L.id]).join(" | "), lv.map(L => specStr(L.spec.out)).join(" | "), spOK],
+    ["Projector span: n − m(−4) at each scale (live)", "Scales.S15, S37", "36, 34, 30, 20, 10", lv.map(L => L.rank).join(", "), rkOK],
+    ["Σ vvᵀ = n·I for all classes, residue, instance, frame (live)", "Scales.S17", "120, 72, 48, 24", lv.slice(0, 4).map(L => L.fs).join(", "), fsOK],
+    ["A block splits into 3 orthogonal 4-sets (live)", "Scales.S1, S9a", "3", String(scaleData.four), scaleData.four === 3],
+    ["Orthogonal 8-frames inside the instance (live)", "Scales.S9a", "36", String(scaleData.fin.length), scaleData.fin.length === 36],
+    ["The instance splits into 6 frames, the residue into 9 (live)", "Scales.S7, S11", "6 + 9 = 15", spreadState.inst.length && spreadState.res.length ? "6 + 9 = 15" : "none found", spreadState.inst.length > 0 && spreadState.res.length > 0],
+    ["Orthogonal 8-frames through class 0", "Scales.S25 (D58)", "135", String(scaleData.thru0), scaleData.thru0 === 135],
+    ["Arrows between any two instances", "Category.T35, T41", "4,608", orbit.done ? (348364800 / orbit.count).toLocaleString() : "…", orbit.done && 348364800 / orbit.count === 4608],
+    ["Block arrangements reached by the gauge group", "Closure.T31, T50", "8", gauge.samples ? `${seen} seen in ${gauge.samples} samples` : "…", seen === 8]
+  ];
+}
+
+/* ---------- simple coordinates, places and functor ---------- */
+var placesReady = false;
+const SIMP = D.simple, GINV = D.ginv, R8 = [0, 1, 2, 3, 4, 5, 6, 7];
+const CART = SIMP.map(a => SIMP.map(b => dot(a, b) / 4));
+const cartIdentity = R8.every(i => R8.every(j => R8.reduce((s, k) => s + CART[i][k] * GINV[k][j], 0) === (i === j ? 1 : 0)));
+function detInt(M) {
+  const n = M.length, X = M.map(r => r.slice()); let prev = 1, sign = 1;
+  for (let k = 0; k < n - 1; k++) {
+    if (X[k][k] === 0) { let s = k + 1; while (s < n && X[s][k] === 0) s++; if (s === n) return 0; [X[k], X[s]] = [X[s], X[k]]; sign = -sign; }
+    for (let i = k + 1; i < n; i++) for (let j = k + 1; j < n; j++) X[i][j] = (X[i][j] * X[k][k] - X[i][k] * X[k][j]) / prev;
+    prev = X[k][k];
+  }
+  return sign * X[n - 1][n - 1];
+}
+const cartDet = detInt(CART);
+const mod = (a, p) => ((a % p) + p) % p;
+const simCoord = v => { const pr = SIMP.map(s => dot(v, s) / 4); return R8.map(j => pr.reduce((s, x, i) => s + x * GINV[i][j], 0)); };
+const SC = reps.map(simCoord);
+const emb = c => R8.map(k => c.reduce((s, x, i) => s + x * SIMP[i][k], 0));
+const classOfVec = v => { const r = rootIndex.get(key(v)); return r === undefined ? -1 : r % 120; };
+const v65c = SC.filter((c, x) => key(emb(c)) === key(reps[x])).length;
+const code2 = SC.map(c => c.reduce((m, x, i) => m | (mod(x, 2) << i), 0));
+const classAtCode = new Int16Array(256).fill(-1); code2.forEach((c, x) => classAtCode[c] = x);
+const bitsOfCode = c => R8.map(i => (c >> i) & 1);
+const bitStr = c => bitsOfCode(c).join("");
+function qf(c) { const b = bitsOfCode(c); let s = 0; for (let i = 0; i < 8; i++) { s += b[i]; for (let j = i + 1; j < 8; j++) s += CART[i][j] * b[i] * b[j]; } return mod(s, 2); }
+function bf(c, d) { const x = bitsOfCode(c), y = bitsOfCode(d); let s = 0; for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) s += x[i] * CART[i][j] * y[j]; return mod(s, 2); }
+const qCount = { one: 0, zero: 0 }; for (let c = 1; c < 256; c++) qf(c) ? qCount.one++ : qCount.zero++;
+const rootsAreQ1 = new Set(code2).size === 120 && code2.every(c => qf(c) === 1) && qCount.one === 120;
+let adjIsB = true; for (let x = 0; x < 120 && adjIsB; x++) for (let y = 0; y < 120; y++) if (x !== y && (bf(code2[x], code2[y]) === 1) !== (A[x][y] === 1)) { adjIsB = false; break; }
+const PRIMES = [2, 3, 5, 7];
+const DIST = PRIMES.map(p => { const s = new Set(); SC.forEach(c => { const a = c.map(x => mod(x, p)).join(","), b = c.map(x => mod(-x, p)).join(","); s.add(a < b ? a : b); }); return s.size; });
+const reflC = (i, c) => { const ci = c.reduce((s, x, j) => s + x * CART[j][i], 0); const o = c.slice(); o[i] = c[i] - ci; return o; };
+const reflCp = (i, c, p) => reflC(i, c).map(x => mod(x, p));
+let t72 = 0; for (let i = 0; i < 8; i++) for (let x = 0; x < 120; x++) if (classOfVec(emb(reflC(i, SC[x]))) === simpleClassPerm[i][x]) t72++;
+let squares = 0; for (const p of PRIMES) for (let i = 0; i < 8; i++) for (let x = 0; x < 120; x++) { const a = reflC(i, SC[x]).map(v => mod(v, p)).join(), b = reflCp(i, SC[x].map(v => mod(v, p)), p).join(); if (a === b) squares++; }
+function negatesAll(frame) { let p = Int16Array.from({ length: 240 }, (_, j) => j); for (const c of frame) { const r = rootPerm(c); p = p.map(j => r[j]); } for (let j = 0; j < 240; j++) if (p[j] !== (j + 120) % 240) return false; return true; }
+const frameNeg = negatesAll(frames8[0]);
+
+/* glue lattices L_n = D_n ∪ (D_n + ½·1), at scale 2 */
+const dotn = (a, b) => a.reduce((s, x, i) => s + x * b[i], 0);
+const addn = (a, b) => a.map((x, i) => x + b[i]);
+const memD = v => v.every(x => mod(x, 2) === 0) && mod(v.reduce((s, x) => s + x / 2, 0), 2) === 0;
+const memG = v => v.every(x => mod(x, 2) === 1) && mod(v.reduce((s, x) => s + (x - 1) / 2, 0), 2) === 0;
+const memL = v => memD(v) || memG(v);
+const GLUE = [];
+for (let n = 1; n <= 24; n++) {
+  const g = new Array(n).fill(1), dg = [];
+  if (n === 1) dg.push([4]);
+  for (let j = 1; j < n; j++) for (const s of [2, -2]) { const v = new Array(n).fill(0); v[0] = 2; v[j] = s; dg.push(v); }
+  const gens = [g].concat(dg);
+  const closed = memL(addn(g, g)) && dg.every(d => memL(addn(g, d)));
+  const integral = gens.every(a => gens.every(b => mod(dotn(a, b), 4) === 0));
+  const even = gens.every(a => mod(dotn(a, a), 8) === 0);
+  const glueRoot = dotn(g, g) === 8;
+  let glueRoots = 0;
+  if (glueRoot) for (let m = 0; m < (1 << n); m++) { const v = R8.slice(0, n).map(i => (m >> i) & 1 ? -1 : 1); if (memG(v)) glueRoots++; }
+  GLUE.push({ n, closed, integral, even, glueRoot, dRoots: 2 * n * (n - 1), glueRoots });
+}
+const glueT57 = GLUE.every(G => G.closed === (G.n % 2 === 0) && G.integral === (G.n % 4 === 0) && (G.integral && G.even) === (G.n % 8 === 0));
+let glueSel = 8;
+function renderGlue() {
+  const rows = [["closed under addition", "closed", "on"], ["integral", "integral", "on"], ["even", "even", "on"], ["glue vector is a root", "glueRoot", "root"]];
+  let h = `<div class="h"></div>` + GLUE.map(G => `<div class="n">${G.n}</div>`).join("");
+  for (const [label, k, cls] of rows) h += `<div class="h">${label}</div>` + GLUE.map(G => `<button class="${G.n === glueSel ? "col" : ""}" data-n="${G.n}" aria-label="n = ${G.n}: ${label} ${G[k] ? "yes" : "no"}"><i class="${G[k] ? cls : ""}"></i></button>`).join("");
+  document.getElementById("glue").innerHTML = h;
+  const G = GLUE[glueSel - 1];
+  kv(document.getElementById("glueKv"), [
+    ["Dimension", String(G.n)],
+    ["Glue vector norm", `n/4 = ${G.n % 4 === 0 ? G.n / 4 : G.n + "/4"} (a root has norm 2)`],
+    ["Properties", [G.closed ? "closed" : "not closed", G.integral ? "integral" : "not integral", G.even ? "even" : "not even"].join(", ")],
+    ["Roots", `${G.dRoots} from D${toSub(G.n)}` + (G.glueRoots ? ` + ${G.glueRoots} from the glue coset = ${G.dRoots + G.glueRoots}` : ", none from the glue coset")]
+  ]);
+}
+const toSub = n => String(n).split("").map(c => "₀₁₂₃₄₅₆₇₈₉"[+c]).join("");
+document.getElementById("glue").addEventListener("click", ev => { const b = ev.target.closest("button[data-n]"); if (!b) return; glueSel = +b.dataset.n; renderGlue(); });
+
+/* residue grid at p = 2 */
+const f2El = document.getElementById("f2");
+function renderF2() {
+  const bl = currentBlocks(), bOf = new Int8Array(120).fill(-1); bl.forEach((b, i) => b.forEach(c => bOf[c] = i));
+  let h = "";
+  for (let row = 0; row < 16; row++) for (let col = 0; col < 16; col++) {
+    const c = (row << 4) | col, x = classAtCode[c];
+    let cls = "", inner;
+    if (c === 0) inner = '<i class="zero"></i>';
+    else if (x < 0) inner = '<i class="ring"></i>';
+    else inner = `<i style="background:var(${bOf[x] >= 0 ? "--b" + bOf[x] : "--dot"})"></i>`;
+    if (x >= 0 && x === selected) cls = "cur"; else if (x >= 0 && A[selected][x]) cls = "nb";
+    const what = x >= 0 ? "class " + x : (c === 0 ? "zero" : "non-root vector");
+    h += `<button class="${cls}" ${x < 0 ? "disabled" : ""} data-x="${x}" title="${what} · ${bitStr(c)}" aria-label="${what}, residue ${bitStr(c)}">${inner}</button>`;
+  }
+  f2El.innerHTML = h;
+  const cs = code2[selected];
+  let nb = 0; for (let y = 0; y < 120; y++) if (y !== selected && bf(cs, code2[y]) === 1) nb++;
+  kv(document.getElementById("f2Kv"), [
+    ["Selected class", String(selected)],
+    ["Simple coordinates", "(" + SC[selected].map(fmtInt).join(", ") + ")"],
+    ["Residue mod 2", bitStr(cs)],
+    ["q(x)", String(qf(cs))],
+    ["Classes with B(x, y) = 1", `${nb}, its 56 neighbours`],
+    ["The 256 residues", `1 zero, ${qCount.one} with q = 1, ${qCount.zero} with q = 0`],
+    ["Classes = residues with q = 1", rootsAreQ1 && adjIsB ? "yes; adjacency = B(x, y) = 1" : "no"]
+  ]);
+}
+const fmtInt = x => x < 0 ? "−" + (-x) : String(x);
+f2El.addEventListener("click", ev => { const b = ev.target.closest("button[data-x]"); if (!b || +b.dataset.x < 0) return; selected = +b.dataset.x; drawPlane(); renderSelection(); });
+
+/* commuting square */
+let sqP = 2, sqI = 0, sqIUser = false;
+function chips(el, items, cur, onPick) {
+  el.innerHTML = items.map(([v, label]) => `<button class="chip" aria-pressed="${v === cur}" data-v="${v}">${label}</button>`).join("");
+  el.onclick = ev => { const b = ev.target.closest("button[data-v]"); if (b) onPick(+b.dataset.v); };
+}
+function renderSquare() {
+  chips(document.getElementById("primeChips"), PRIMES.map(p => [p, "p = " + p]), sqP, v => { sqP = v; renderSquare(); });
+  if (!sqIUser) { const mv = R8.find(i => classOfVec(emb(reflC(i, SC[selected]))) !== selected); sqI = mv === undefined ? 0 : mv; }
+  chips(document.getElementById("reflChips"), R8.map(i => [i, "s" + (i + 1)]), sqI, v => { sqI = v; sqIUser = true; renderSquare(); });
+  const c = SC[selected], img = reflC(sqI, c), red = v => v.map(x => mod(x, sqP));
+  const a = red(img), b = reflCp(sqI, red(c), sqP), same = a.join() === b.join();
+  const imgClass = classOfVec(emb(img)), f = v => "(" + v.map(fmtInt).join(", ") + ")";
+  document.getElementById("csq").innerHTML = `
+    <div class="cell"><div class="t">class ${selected}, simple coordinates</div><div class="v">${f(c)}</div></div>
+    <div class="arr">s${sqI + 1}<br>→</div>
+    <div class="cell"><div class="t">reflected: class ${imgClass}</div><div class="v">${f(img)}</div></div>
+    <div class="arr">mod ${sqP} ↓</div><div></div><div class="arr">mod ${sqP} ↓</div>
+    <div class="cell"><div class="t">residue at p = ${sqP}</div><div class="v">${f(red(c))}</div></div>
+    <div class="arr">s${sqI + 1}<br>→</div>
+    <div class="cell"><div class="t">residue of the image</div><div class="v">${f(b)} ${same ? '<span class="ok">✓ same both ways</span>' : "differs"}</div></div>`;
+}
+
+/* reflect through an orthogonal frame: −I */
+document.getElementById("frameBtn").addEventListener("click", () => {
+  const fs = frames8.filter(fr => fr.includes(selected)), fr = fs[Math.floor(Math.random() * fs.length)];
+  showEvent(`Reflecting through the orthogonal frame ${fr.join(", ")}…`);
+  runWord(fr, 240, () => showEvent(`<strong>Every root moved to its negative.</strong> The eight reflections in an orthogonal frame multiply to −I, so all 120 classes stay put and the instance is unchanged. By <code>Places.T73</code>, −I and the identity are the only elements that fix every class, which is why the Atlas works with the reflection group modulo ±1.`));
+});
+
+function placeEvidenceRows() {
+  const glue8 = GLUE.filter(G => G.glueRoot).map(G => G.n);
+  return [
+    ["Closed iff 2 | n, integral iff 4 | n, even and integral iff 8 | n", "Glue.T57a–c", "every n", glueT57 ? "every n from 1 to 24" : "fails", glueT57],
+    ["The glue vector has root norm only in dimension 8", "Glue.T84, T85", "n = 8", "n = " + glue8.join(", "), glue8.join() === "8"],
+    ["E8 from glue: D8 roots plus glue roots", "Roots.T5", "240", `${GLUE[7].dRoots} + ${GLUE[7].glueRoots} = ${GLUE[7].dRoots + GLUE[7].glueRoots}`, GLUE[7].dRoots + GLUE[7].glueRoots === 240],
+    ["Gram matrix of the simple roots has determinant 1 and an integer inverse", "Roots.T58x, Places.T58", "det 1", `det ${cartDet}, C·C⁻¹ ${cartIdentity ? "= I" : "≠ I"}`, cartDet === 1 && cartIdentity],
+    ["Every root has integer simple coordinates", "Places.V65c", "120 of 120", `${v65c} of 120`, v65c === 120],
+    ["Integer reflection matrices act on classes as the root reflections", "Places.T72", "960 of 960", `${t72} of 960`, t72 === 960],
+    ["Class addresses are distinct (residues at p = 2, 3, 5, 7)", "Places.T75, V71", "120 at each", DIST.join(", "), DIST.every(d => d === 120)],
+    ["Reflecting commutes with passing to a prime (p = 2, 3, 5, 7)", "Functor.F3, T79", "3,840 of 3,840", `${squares.toLocaleString()} of 3,840`, squares === 3840],
+    ["−I is a reflection word and fixes every class", "Places.T73, T80p", "−I", frameNeg ? "the 8 reflections of a frame give −I" : "no", frameNeg]
+  ];
+}
+placesReady = true;
+
+/* ---------- deeper structure: blocks, quads, overlaps, chains ---------- */
+var deepReady = false;
+const pop32 = x => { x = x - ((x >>> 1) & 0x55555555); x = (x & 0x33333333) + ((x >>> 2) & 0x33333333); return (((x + (x >>> 4)) & 0x0F0F0F0F) * 0x01010101) >>> 24; };
+const ADJM = [...Array(120).keys()].map(c => maskOf([...Array(120).keys()].filter(j => A[c][j])));
+const permMul = (p, q) => { const o = new Int16Array(p.length); for (let i = 0; i < p.length; i++) o[i] = q[p[i]]; return o; };
+const permInv = p => { const o = new Int16Array(p.length); for (let i = 0; i < p.length; i++) o[p[i]] = i; return o; };
+const ID120 = Int16Array.from({ length: 120 }, (_, i) => i);
+const wordPerm = w => { let p = ID120; for (const g of w) p = permMul(p, simpleClassPerm[g]); return p; };
+function partsOf(cl) {
+  const out = [];
+  for (let a = 0; a < cl.length; a++) for (let b = a + 1; b < cl.length; b++) for (let c = b + 1; c < cl.length; c++) for (let d = c + 1; d < cl.length; d++) {
+    const s = [cl[a], cl[b], cl[c], cl[d]];
+    if (ORTH[s[0]][s[1]] && ORTH[s[0]][s[2]] && ORTH[s[0]][s[3]] && ORTH[s[1]][s[2]] && ORTH[s[1]][s[3]] && ORTH[s[2]][s[3]]) out.push(s);
+  }
+  return out;
+}
+
+/* block section */
+let blkSel = 0, basisSel = 0;
+function blockState() { const bl = currentBlocks(); const cl = bl[blkSel]; return { cl, parts: partsOf(cl) }; }
+function renderBlock() {
+  chips(document.getElementById("blockChips"), [0, 1, 2, 3].map(b => [b, "block " + b]), blkSel, v => { blkSel = v; renderBlock(); renderTriTiles(); });
+  chips(document.getElementById("basisChips"), [0, 1, 2].map(i => [i, "part " + (i + 1)]), basisSel, v => { basisSel = v; renderBlock(); });
+  const { cl, parts } = blockState();
+  const C = [[170, 62], [62, 238], [278, 238]], col = `var(--b${blkSel})`, off = [[-14, -14], [14, -14], [-14, 14], [14, 14]];
+  const pos = [];
+  parts.forEach((p, i) => p.forEach((c, k) => { pos[c] = [C[i][0] + off[k][0], C[i][1] + off[k][1]]; }));
+  let s = "";
+  for (let i = 0; i < 3; i++) for (let j = i + 1; j < 3; j++) for (const a of parts[i]) for (const b of parts[j]) s += `<line class="tri-e" x1="${pos[a][0]}" y1="${pos[a][1]}" x2="${pos[b][0]}" y2="${pos[b][1]}"/>`;
+  parts.forEach((p, i) => p.forEach(c => { const [x, y] = pos[c]; s += `<circle cx="${x}" cy="${y}" r="11" style="fill:${col};stroke:${i === basisSel ? "var(--fg)" : "var(--bg)"};stroke-width:${i === basisSel ? 2 : 1.5}"/><text class="tri-num" x="${x}" y="${y + 3.5}" text-anchor="middle">${c}</text>`; }));
+  const lab = [[170, 22, "part 1"], [62, 284, "part 2"], [278, 284, "part 3"]];
+  lab.forEach(([x, y, tx], i) => s += `<text class="tri-lab" x="${x}" y="${y}" text-anchor="middle">${tx}${i === basisSel ? " · basis" : ""}</text>`);
+  document.getElementById("triSvg").innerHTML = s;
+  const basis = parts[basisSel].map(c => reps[c]);
+  const rows = [];
+  parts.forEach((p, i) => { if (i === basisSel) return; p.forEach(c => { let sg = basis.map(r => Math.sign(dot(reps[c], r))); if (sg[0] < 0) sg = sg.map(x => -x); rows.push({ c, part: i, sg, odd: sg.filter(x => x < 0).length % 2 }); }); });
+  rows.sort((a, b) => a.odd - b.odd || a.c - b.c);
+  document.getElementById("signTable").innerHTML = `<thead><tr><th>Class</th><th>½(r₁ r₂ r₃ r₄) signs</th><th>Minus signs</th><th>Part</th></tr></thead><tbody>` +
+    rows.map(r => `<tr><td class="mono">${r.c}</td><td class="mono">${r.sg.map(x => x > 0 ? "+" : "−").join(" ")}</td><td>${r.odd ? "odd" : "even"}</td><td>part ${r.part + 1}</td></tr>`).join("") + "</tbody>";
+}
+function reconChecks() {
+  let ok = 0, n = 0;
+  for (const cl of currentBlocks()) { const parts = partsOf(cl); parts.forEach((base, bi) => parts.forEach((p, pi) => { if (pi === bi) return; for (const c of p) { n++; const x = reps[c]; const rhs = R8.map(k => base.reduce((s, b) => s + dot(x, reps[b]) * reps[b][k], 0)); if (rhs.every((v, k) => v === 8 * x[k])) ok++; } })); }
+  return [ok, n];
+}
+function k444All() {
+  return currentBlocks().every(cl => { const ps = partsOf(cl); if (ps.length !== 3) return false; for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) for (const a of ps[i]) for (const b of ps[j]) { if (a === b) continue; if (i === j ? !ORTH[a][b] : !A[a][b]) return false; } return true; });
+}
+
+/* block orbit map (3,150) for triality */
+const borb = { masks: [], map: new Map(), parent: [], gen: [], ready: false };
+function mapBlocks() {
+  const b0 = maskOf(A0[0]); borb.masks.push(b0); borb.map.set(mkey(b0), 0); borb.parent.push(-1); borb.gen.push(-1);
+  for (let h = 0; h < borb.masks.length; h++) for (let g = 0; g < 8; g++) { const n = applyMask(simpleClassPerm[g], borb.masks[h], 0), k = mkey(n); if (!borb.map.has(k)) { borb.map.set(k, borb.masks.length); borb.masks.push(n); borb.parent.push(h); borb.gen.push(g); } }
+  borb.ready = true;
+}
+function bpath(i) { const w = []; while (borb.parent[i] >= 0) { w.push(borb.gen[i]); i = borb.parent[i]; } return w.reverse(); }
+// a near-uniform symmetry of the selected block: a long random reflection word, then the shortest way back
+function blockLoopWord(len) {
+  const cur = borb.map.get(mkey(maskOf(blockState().cl))), toCur = bpath(cur);
+  const w = Array.from({ length: len || 48 }, () => Math.floor(Math.random() * 8));
+  let m = borb.masks[0]; for (const g of w) m = applyMask(simpleClassPerm[g], m, 0);
+  const back = bpath(borb.map.get(mkey(m))).reverse();
+  return toCur.slice().reverse().concat(w, back, toCur);
+}
+// random elements of the reflection group by product replacement, then corrected back into a stabilizer
+const PRS = { slots: null, acc: ID120 };
+function uniformW() {
+  if (!PRS.slots) { PRS.slots = []; for (let i = 0; i < 12; i++) PRS.slots.push(simpleClassPerm[i % 8]); for (let k = 0; k < 120; k++) prStep(); }
+  return prStep();
+}
+function prStep() { const s = PRS.slots, i = Math.floor(Math.random() * s.length); let j = Math.floor(Math.random() * (s.length - 1)); if (j >= i) j++; s[i] = Math.random() < 0.5 ? permMul(s[i], s[j]) : permMul(s[j], s[i]); PRS.acc = permMul(PRS.acc, s[i]); return PRS.acc; }
+function gaugeRandomPerm() {
+  const g = uniformW(), m = orbit.map.get(mkey(applyMask(g, A0mask, 0)));
+  return permMul(g, wordPerm(pathToRoot(m).reverse()));
+}
+function blockRandomPerm() {
+  const toCur = bpath(borb.map.get(mkey(maskOf(blockState().cl))));
+  const g = uniformW(), m = borb.map.get(mkey(applyMask(g, borb.masks[0], 0)));
+  const fix0 = permMul(g, wordPerm(bpath(m).reverse()));
+  return permMul(permMul(wordPerm(toCur.slice().reverse()), fix0), wordPerm(toCur));
+}
+const triTally = new Map();
+let triLast = null;
+function partPermOf(perm) {
+  const { parts } = blockState();
+  const keyOf = s => s.slice().sort((a, b) => a - b).join(",");
+  const idx = new Map(parts.map((p, i) => [keyOf(p), i]));
+  return parts.map(p => idx.get(keyOf(p.map(c => perm[c]))));
+}
+const S3 = [[0, 1, 2], [1, 0, 2], [0, 2, 1], [2, 1, 0], [1, 2, 0], [2, 0, 1]];
+const S3name = ["identity", "swap 1·2", "swap 2·3", "swap 1·3", "rotate", "rotate back"];
+function renderTriTiles() {
+  const C = [[36, 10], [10, 56], [62, 56]];
+  document.getElementById("tri6").innerHTML = S3.map((pp, i) => {
+    const k = pp.join(""), n = triTally.get(k) || 0;
+    let s = `<polygon points="36,10 10,56 62,56" style="fill:none;stroke:var(--line)"/>`;
+    pp.forEach((dst, src) => { const [x, y] = C[dst]; s += `<circle cx="${x}" cy="${y}" r="8" style="fill:var(--b${blkSel})"/><text x="${x}" y="${y + 3.5}" text-anchor="middle" style="fill:var(--bg);font:600 10px var(--mono)">${src + 1}</text>`; });
+    return `<div class="mini${triLast === k ? " hit" : ""}"><svg viewBox="0 0 72 66">${s}</svg><div class="what">${S3name[i]}</div><div class="n">${n} sampled</div></div>`;
+  }).join("");
+  const seen = S3.filter(pp => triTally.get(pp.join(""))).length;
+  document.getElementById("triNote").textContent = triTally.size ? `${seen} of 6 permutations of the parts seen in ${[...triTally.values()].reduce((a, b) => a + b, 0)} samples of block ${blkSel}'s symmetries. Each tile shows where parts 1, 2, 3 go.` : "Sampling…";
+}
+function sampleTri(n) {
+  for (let i = 0; i < n; i++) { const k = partPermOf(blockRandomPerm()).join(""); triTally.set(k, (triTally.get(k) || 0) + 1); triLast = k; }
+  renderTriTiles(); renderEvidence();
+}
+document.getElementById("triSample").addEventListener("click", () => sampleTri(100));
+document.getElementById("triRun").addEventListener("click", () => {
+  if (busy) return;
+  const w = blockLoopWord(24); if (!w) return;
+  const k = partPermOf(wordPerm(w)).join("");
+  document.getElementById("tab-dynamics").click();
+  showEvent(`Running a symmetry of block ${blkSel}: ${w.length} simple reflections…`);
+  runWord(w.map(g => simpleRoot[g]), 70, () => {
+    triTally.set(k, (triTally.get(k) || 0) + 1); triLast = k; renderTriTiles();
+    const i = S3.findIndex(pp => pp.join("") === k);
+    showEvent(`<strong>Block ${blkSel} is back on its own 12 classes.</strong> Its parts moved by ${S3name[i]}. The rest of the instance moved: the new instance is one of the 96 that contain this block.`);
+  });
+});
+
+/* orthogonal quads */
+const quads = { list: null, closes: null, nClose: 0, perBlock: null, allBlocks: false };
+function enumerateQuads() {
+  const L = [], C = [];
+  const blockKeys = new Map(census.blocks.map((b, i) => [mkey(b), i])), hits = new Int32Array(census.blocks.length);
+  let allBlocks = true;
+  for (let a = 0; a < 120; a++) for (let b = a + 1; b < 120; b++) { if (!ORTH[a][b]) continue;
+    for (let c = b + 1; c < 120; c++) { if (!ORTH[a][c] || !ORTH[b][c]) continue;
+      for (let d = c + 1; d < 120; d++) { if (!ORTH[a][d] || !ORTH[b][d] || !ORTH[c][d]) continue;
+        const w = new Uint32Array(4); let cnt = 0;
+        for (let k = 0; k < 4; k++) { w[k] = ADJM[a][k] & ADJM[b][k] & ADJM[c][k] & ADJM[d][k]; cnt += pop32(w[k]); }
+        L.push(a, b, c, d); C.push(cnt);
+        if (cnt + 4 === 12) { for (const x of [a, b, c, d]) w[x >> 5] = (w[x >> 5] | (1 << (x & 31))) >>> 0; const bi = blockKeys.get(mkey(w)); if (bi === undefined) allBlocks = false; else hits[bi]++; }
+      } } }
+  quads.list = Uint8Array.from(L); quads.common = Uint8Array.from(C);
+  quads.n = C.length; quads.nClose = C.filter(x => x === 8).length; quads.sizes = [...new Set(C)].sort((x, y) => x - y);
+  quads.perBlock = [...new Set(hits)]; quads.allBlocks = allBlocks;
+  const bar = document.getElementById("quadBar"), f = quads.nClose / quads.n;
+  bar.innerHTML = `<div style="flex:${f} 1 0;background:var(--accent);color:var(--bg)">${quads.nClose.toLocaleString()} close to a block</div><div style="flex:${1 - f} 1 0;background:var(--line);color:var(--fg)">${(quads.n - quads.nClose).toLocaleString()} have no common neighbour</div>`;
+  document.getElementById("quadBtn").disabled = false; document.getElementById("quadBlkBtn").disabled = false;
+  drawQuad(false);
+}
+function drawQuad(mustClose) {
+  let i; do { i = Math.floor(Math.random() * quads.n); } while (mustClose && quads.common[i] !== 8);
+  const q = Array.from(quads.list.subarray(4 * i, 4 * i + 4));
+  const common = [...Array(120).keys()].filter(c => !q.includes(c) && q.every(x => A[c][x]));
+  const set = q.concat(common).sort((a, b) => a - b), bl = currentBlocks();
+  const inInst = bl.findIndex(b => b.length === set.length && b.every((x, k) => x === set[k]));
+  const rows = [["Four orthogonal classes", q.join(", ")], ["Adjacent to all four", common.length ? common.join(", ") : "none"]];
+  if (common.length === 8) {
+    const parts = partsOf(set);
+    rows.push(["Result", `a block of 12 classes${inInst >= 0 ? `: block ${inInst} of the current instance` : ""}`]);
+    rows.push(["Its three parts", parts.map(p => "{" + p.join(", ") + "}").join("  ")]);
+  } else rows.push(["Result", "no block: the span of these four roots holds no other root"]);
+  rows.push(["Census", `${quads.n.toLocaleString()} orthogonal quads; ${quads.nClose.toLocaleString()} close, ${quads.perBlock.join(", ")} in each of ${census.blocks.length.toLocaleString()} blocks`]);
+  kv(document.getElementById("quadKv"), rows);
+  selected = q[0]; drawPlane(); renderSelection();
+}
+document.getElementById("quadBtn").addEventListener("click", () => drawQuad(false));
+document.getElementById("quadBlkBtn").addEventListener("click", () => drawQuad(true));
+
+/* overlaps */
+const meet = { hist: null, bars: [] };
+function computeMeet() {
+  if (!orbit.done) return;
+  const bl = currentBlocks(), cur = maskOf(bl.flat()), curB = bl.map(b => mkey(maskOf(b)));
+  const H = new Map(); let one3 = 0;
+  for (let i = 0; i < orbit.count; i++) {
+    let k = 0; for (let w = 0; w < 4; w++) k += pop32(orbit.masks[i * 4 + w] & cur[w]);
+    let sb = 0; for (let b = 0; b < 4; b++) if (curB.includes(mkey(orbit.blocks, i * 16 + b * 4))) sb++;
+    if (sb === 1 || sb === 3) one3++;
+    const key = k + ":" + sb; const e = H.get(key) || { k, sb, n: 0, ids: [] }; e.n++; if (e.ids.length < 64) e.ids.push(i); H.set(key, e);
+  }
+  meet.hist = [...H.values()]; meet.one3 = one3; meet.cur = cur;
+  drawMeet();
+  const frameRows = meet.hist.filter(e => e.sb === 2).sort((a, b) => a.k - b.k);
+  kv(document.getElementById("meetKv"), [
+    ["Share no block", meet.hist.filter(e => e.sb === 0).reduce((s, e) => s + e.n, 0).toLocaleString() + " instances"],
+    ["Share one frame", frameRows.reduce((s, e) => s + e.n, 0) + " instances: " + frameRows.map(e => `${e.n} meeting in ${e.k}`).join(", ")],
+    ["Share one or three blocks", String(one3)],
+    ["Disjoint from the current instance", String((meet.hist.find(e => e.k === 0) || { n: 0 }).n)]
+  ]);
+  drawFrameInc();
+  renderEvidence();
+}
+function drawMeet() {
+  const cv = document.getElementById("meetHist"), wrap = document.getElementById("meetWrap"), w = wrap.clientWidth, h = 260, d = window.devicePixelRatio || 1;
+  cv.width = Math.round(w * d); cv.height = Math.round(h * d); cv.style.height = h + "px";
+  const c = cv.getContext("2d"); c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, w, h);
+  const L = 50, Rm = 8, Tp = 12, Bt = 34, pw = w - L - Rm, ph = h - Tp - Bt, maxY = 24000, xs = 25, bw = pw / xs;
+  c.font = "11px " + getComputedStyle(document.body).getPropertyValue("--mono"); c.fillStyle = T.muted; c.strokeStyle = T.line; c.lineWidth = 1;
+  c.textAlign = "right"; c.textBaseline = "middle";
+  for (const v of [0, 8000, 16000, 24000]) { const y = Tp + ph - v / maxY * ph; c.beginPath(); c.moveTo(L, y + 0.5); c.lineTo(L + pw, y + 0.5); c.stroke(); c.fillText(v.toLocaleString(), L - 6, y); }
+  c.textAlign = "center"; c.textBaseline = "top";
+  for (let k = 0; k <= 48; k += 8) c.fillText(String(k), L + (k / 2 + 0.5) * bw, Tp + ph + 6);
+  c.fillText("classes shared with the current instance", L + pw / 2, Tp + ph + 20);
+  meet.bars = [];
+  for (let x = 0; x < xs; x++) {
+    const k = 2 * x, segs = meet.hist.filter(e => e.k === k).sort((a, b) => a.sb - b.sb);
+    let y0 = Tp + ph;
+    for (const e of segs) {
+      const hh = Math.max(e.n > 0 ? 1.5 : 0, e.n / maxY * ph), bx = L + x * bw + 1, bwid = Math.max(1, bw - 2);
+      c.fillStyle = e.sb === 0 ? T.dot : e.sb === 2 ? T.accent : T.fg;
+      c.fillRect(bx, y0 - hh, bwid, hh);
+      meet.bars.push({ x0: L + x * bw, x1: L + (x + 1) * bw, y0: y0 - hh, y1: y0, e });
+      y0 -= hh + (hh > 2 ? 1 : 0);
+    }
+  }
+}
+const meetCv = document.getElementById("meetHist"), meetTip = document.getElementById("meetTip");
+function meetHit(ev) { const r = meetCv.getBoundingClientRect(), x = ev.clientX - r.left, y = ev.clientY - r.top; const col = meet.bars.filter(b => x >= b.x0 && x < b.x1); if (!col.length) return null; return col.find(b => y >= b.y0 - 3 && y <= b.y1 + 3) || col[col.length - 1]; }
+meetCv.addEventListener("pointermove", ev => { const b = meetHit(ev); if (!b) { meetTip.hidden = true; return; } meetTip.hidden = false; meetTip.textContent = `${b.e.n.toLocaleString()} share ${b.e.k} classes` + (b.e.sb === 2 ? ", one frame" : b.e.sb === 4 ? ", all blocks" : ""); meetTip.style.left = ((b.x0 + b.x1) / 2) + "px"; meetTip.style.top = Math.max(18, b.y0) + "px"; });
+meetCv.addEventListener("pointerleave", () => meetTip.hidden = true);
+meetCv.addEventListener("click", ev => {
+  const b = meetHit(ev); if (!b || busy || b.e.sb === 4) return;
+  const target = b.e.ids[Math.floor(Math.random() * b.e.ids.length)], cur = orbit.map.get(mkey(meet.cur));
+  const word = pathToRoot(cur).reverse().concat(pathToRoot(target));
+  document.getElementById("tab-dynamics").click();
+  showEvent(`Walking to an instance that shares ${b.e.k} classes with this one: ${word.length} reflections…`);
+  runWord(word.map(g => simpleRoot[g]), 70, () => showEvent(`<strong>Arrived.</strong> This instance shares ${b.e.k} classes with the one you started from${b.e.sb === 2 ? ", including one whole frame" : " and no block"}. The overlap histogram is now drawn from here and has the same shape.`));
+});
+
+/* frame completions */
+function drawFrameInc() {
+  const bl = currentBlocks(), F = maskOf(bl[0].concat(bl[3])), Fset = new Set(bl[0].concat(bl[3])), cur = maskOf(bl.flat());
+  const comps = [];
+  for (let i = 0; i < orbit.count; i++) { let ok = true; for (let w = 0; w < 4; w++) if ((orbit.masks[i * 4 + w] & F[w]) !== F[w]) { ok = false; break; } if (ok) comps.push(i); }
+  const outside = [...Array(120).keys()].filter(c => !Fset.has(c));
+  const partner = i => { const s = new Set(); for (const c of outside) if ((orbit.masks[i * 4 + (c >> 5)] >>> (c & 31)) & 1) s.add(c); return s; };
+  const P = comps.map(partner), curP = new Set(bl[1].concat(bl[2]));
+  const ord = P.map((s, i) => ({ i, s, ov: [...s].filter(c => curP.has(c)).length })).sort((a, b) => b.ov - a.ov);
+  const rows = outside.slice().sort((a, b) => (curP.has(b) - curP.has(a)) || a - b);
+  const cv = document.getElementById("frameInc"), w = Math.min(cv.parentElement.clientWidth, 420), d = window.devicePixelRatio || 1;
+  cv.width = Math.round(w * d); cv.height = Math.round(w * d); cv.style.width = w + "px"; cv.style.height = w + "px";
+  const c = cv.getContext("2d"); c.setTransform(d, 0, 0, d, 0, 0); c.fillStyle = T.panel; c.fillRect(0, 0, w, w);
+  const s = w / 96;
+  ord.forEach((o, j) => rows.forEach((cl, r) => { if (o.s.has(cl)) { c.fillStyle = j === 0 ? T.accent : T.dot; c.fillRect(j * s, r * s, Math.max(1, s - 0.3), Math.max(1, s - 0.3)); } }));
+  const use = new Map(); P.forEach(sset => sset.forEach(x => use.set(x, (use.get(x) || 0) + 1)));
+  const ovs = new Map(); ord.slice(1).forEach(o => ovs.set(o.ov, (ovs.get(o.ov) || 0) + 1));
+  meet.frame = { n: comps.length, sizes: [...new Set(P.map(x => x.size))], uses: [...new Set(use.values())] };
+  kv(document.getElementById("frameKv"), [
+    ["Instances containing the frame", String(comps.length)],
+    ["Size of each completion", meet.frame.sizes.join(", ") + " classes"],
+    ["Completions containing each outside class", meet.frame.uses.join(", ")],
+    ["Overlap with the current completion", [...ovs.entries()].sort((a, b) => a[0] - b[0]).map(([k, v]) => `${v} meet it in ${k}`).join(", ")]
+  ]);
+}
+let deepTimer = 0;
+function scheduleDeep() { clearTimeout(deepTimer); deepTimer = setTimeout(() => { if (busy) { scheduleDeep(); return; } renderBlock(); computeMeet(); }, busy ? 500 : 120); }
+
+/* stabilizer chains by randomized Schreier–Sims */
+function schreierSims(gens, base, target, fresh) {
+  const L = base.map(() => ({ S: [], T: null }));
+  const rebuild = i => { const b = base[i], T = new Map([[b, ID120]]), q = [b]; for (let h = 0; h < q.length; h++) { const x = q[h], u = T.get(x); for (const s of L[i].S) { const y = s[x]; if (!T.has(y)) { T.set(y, permMul(u, s)); q.push(y); } } } L[i].T = T; };
+  base.forEach((_, i) => rebuild(i));
+  const sift = g => { for (let i = 0; i < base.length; i++) { const u = L[i].T.get(g[base[i]]); if (!u) return { g, i }; g = permMul(g, permInv(u)); } return { g, i: base.length }; };
+  let incomplete = false;
+  const add = g => { const r = sift(g); if (r.i === base.length) { if (r.g.some((x, k) => x !== k)) incomplete = true; return; } for (let j = 0; j <= r.i; j++) { L[j].S.push(r.g); rebuild(j); } };
+  const order = () => L.reduce((s, l) => s * l.T.size, 1);
+  gens.forEach(add);
+  const pr = gens.slice(); while (pr.length < 10) pr.push(gens[pr.length % gens.length]);
+  let acc = ID120; const rnd = () => { const i = Math.floor(Math.random() * pr.length); let j = Math.floor(Math.random() * (pr.length - 1)); if (j >= i) j++; pr[i] = permMul(pr[i], pr[j]); acc = permMul(acc, pr[i]); return acc; };
+  for (let k = 0; k < 40; k++) rnd();
+  let tries = 0; while (order() < target && tries++ < 4000) add(fresh ? fresh() : rnd());
+  return { orbits: L.map(l => l.T.size), order: order(), incomplete };
+}
+const chains = [];
+function runChains() {
+  // fresh near-uniform elements: a gauge transformation, and its power that fixes every block
+  const kernelElement = () => { const g = gaugeRandomPerm(), bp = blockPermOf(g); let k = 1, p = bp.slice(); while (p.some((x, i) => x !== i) && k < 8) { p = p.map(x => bp[x]); k++; } let h = ID120; for (let i = 0; i < k; i++) h = permMul(h, g); return h; };
+  const gauge = Array.from({ length: 12 }, () => gaugeRandomPerm()), kernel = Array.from({ length: 12 }, kernelElement);
+  const spec = [
+    { name: "Reflection group on the 120 classes", note: "W(E8)/{±1}", base: [0, 1, 2, 4, 6, 8, 10], gens: simpleClassPerm, target: 348364800, thm: "Group.autChain, T28" },
+    { name: "Gauge group of A0", note: "maps the 48 classes of A0 to themselves", base: [0, 1, 2, 4, 6], gens: gauge, fresh: gaugeRandomPerm, target: 4608, thm: "Group.stabChain, gaugeOrderW0" },
+    { name: "Gauge elements fixing every block", note: "the kernel of the action on the four blocks", base: [8, 58], gens: kernel, fresh: kernelElement, target: 576, thm: "Group.kerChain, T54" }
+  ];
+  const A0set = new Set(A0.flat());
+  chains.length = 0;
+  for (const s of spec) { const r = s.gens.length ? schreierSims(s.gens, s.base, s.target, s.fresh) : { orbits: [], order: 0 }; chains.push(Object.assign({}, s, r)); }
+  document.getElementById("chains").innerHTML = chains.map(ch => `<div class="chainrow"><div class="head"><strong>${ch.name}</strong><span class="note">${ch.note}</span><span class="note mono">${ch.thm}</span></div>
+    <div class="steps">${ch.orbits.map((o, i) => `${i ? '<span class="times">×</span>' : ""}<div class="step"><span class="o">${o}</span><span class="b">base ${ch.base[i]}${A0set.has(ch.base[i]) ? " · in A0" : ""}</span></div>`).join("")}<span class="times">=</span><div class="step"><span class="o">${ch.order.toLocaleString()}</span><span class="b">${ch.order === ch.target ? "✓ proved order" : "target " + ch.target.toLocaleString()}</span></div></div></div>`).join("") +
+    `<p class="note">Orbit lengths depend on the base points, which come from the source. Class 1 is orthogonal to class 0, and the 63 classes orthogonal to it form one orbit. The kernel's first orbit is the whole residue: the elements fixing every block move each of the 72 outside classes to every other.</p>`;
+  renderEvidence();
+}
+function deepAfterOrbit() {
+  document.getElementById("triSample").disabled = false; document.getElementById("triRun").disabled = false;
+  setTimeout(() => { computeMeet(); }, 30);
+  setTimeout(() => { sampleTri(100); }, 60);
+  setTimeout(runChains, 120);
+}
+function deepEvidenceRows() {
+  const [rc, rn] = reconChecks(), ch = name => chains.find(c => c.thm.startsWith(name));
+  const seen = S3.filter(pp => triTally.get(pp.join(""))).length;
+  const chainRow = (label, nm, target) => { const c = ch(nm); return [label, c ? c.thm : nm, target.toLocaleString(), c ? c.orbits.join(" · ") + " = " + c.order.toLocaleString() : "…", !!c && c.order === target && !c.incomplete]; };
+  return [
+    ["Inside a block, classes in one part are orthogonal and classes in different parts are adjacent (live)", "Scales.S1, S29", "all 4 blocks", k444All() ? "all 4 blocks" : "fails", k444All()],
+    ["Each class of a block is ½(±r₁±r₂±r₃±r₄) over any part (live)", "Census.recon_of_parseval", `${rn} of ${rn}`, `${rc} of ${rn}`, rc === rn && rn === 96],
+    ["Block symmetries permute the three parts in all six ways", "Scales.S1 (computed)", "6", triTally.size ? `${seen} seen` : "…", seen === 6],
+    ["Four orthogonal classes whose closure has 12 classes form a block", "Census.block_of_quad", "every closing quad", quads.list ? `${quads.nClose.toLocaleString()} of ${quads.nClose.toLocaleString()}` : "…", !!quads.list && quads.allBlocks],
+    ["Every block contains an orthogonal quad", "Census.block_has_orthogonal_quad", "all 3,150", quads.list ? `${quads.perBlock.join(", ")} in each` : "…", !!quads.list && quads.perBlock.join() === "3"],
+    ["Instances never share exactly one or three blocks (live)", "Blocks.T17, Closure.T25 (computed)", "0", meet.hist ? String(meet.one3) : "…", !!meet.hist && meet.one3 === 0],
+    chainRow("Stabilizer chain of the reflection group", "Group.autChain", 348364800),
+    chainRow("Stabilizer chain of the gauge group", "Group.stabChain", 4608),
+    chainRow("Stabilizer chain of the block-fixing gauge elements", "Group.kerChain", 576)
+  ];
+}
+mapBlocks();
+setTimeout(() => { enumerateQuads(); renderEvidence(); }, 40);
+deepReady = true;
+
+/* ---------- theme changes ---------- */
+const rethemes = () => { readTokens(); drawPlane(); drawHeat(); drawHist(); if (meet.hist) { drawMeet(); drawFrameInc(); } };
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", rethemes);
+new MutationObserver(rethemes).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+new ResizeObserver(() => { sizePlane(); drawHeat(); drawHist(); if (meet.hist) { drawMeet(); drawFrameInc(); } }).observe(document.querySelector(".wrap"));
+
+/* ---------- boot ---------- */
+renderGlue();
+selected = A0[0][0];
+setMode("atlas");
+sizePlane();
+runCensus();
+refreshInstance();
+setTimeout(orbitChunk, 50);
+setBusy();
+})();
+</script>
+
+</body></html>
